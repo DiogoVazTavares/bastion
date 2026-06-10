@@ -104,13 +104,13 @@ cms/public/uploads/*
 # CMS — Node.js
 ############################
 
-cms/lib-cov
-cms/lcov.info
-cms/pids
-cms/logs
-cms/results
-cms/node_modules
-cms/.node_history
+*/lib-cov
+*/lcov.info
+*/pids
+*/logs
+*/results
+*/node_modules
+*/.node_history
 
 ############################
 # CMS — Package managers
