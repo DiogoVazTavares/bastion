@@ -1,0 +1,150 @@
+/* Component hero */
+@import "../@helpers.less";
+@import "../@variables.less";
+
+.hero-base() {
+    .hero {
+        &__title {
+            position: absolute;
+            top: 50%;
+            left: 5%;
+            width: 90%;
+            transform: translate3d(0,-80%,0);
+            z-index: 3;
+            text-align: center;
+            color: white;
+            font-size: 3.5rem;
+            line-height: 1;
+            opacity: 0;
+            transition: all .7s ease;
+        }
+
+        .body--splash &[data-viewport="true"] &__title {
+            opacity: 0;
+            transform: translate3d(0,-80%,0);
+            // prevent animation if there is a splash page
+        }
+
+        &[data-viewport="true"] &__title {
+            opacity: 1;
+            transform: translate3d(0,-50%,0);
+        }
+
+        &__video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            font-family: "object-fit: cover;";
+            z-index: 2;
+        }
+
+        .touchevents &__video {
+            display: none;
+        }
+
+        &__image-overlay {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            top: 0;
+            left: 0;
+            /*background-color: rgba(38, 67, 64, .2);*/
+            background-color: rgba(20,20,20,.3);
+            z-index: 2;
+        }
+
+        &__image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            font-family: "object-fit: cover;";
+            z-index: 1;
+        }
+
+        &__figure {
+            position: relative;
+            height: 100%;
+            z-index: 0;
+            left: 50%;
+            width: 100vw;
+            margin-left: -50vw;
+        }
+
+        &__button {
+            position: absolute;
+            left: 50%;
+            transform: translate3d(-50%, 80%,0);
+            transition: all .7s ease;
+            opacity: 0;
+
+            &:before {
+                color: white;
+                border: 1px solid white;
+                border-radius: 100%;
+                font-size: 2rem;
+            }
+
+            &:hover:before {
+                background-color: white;
+                color: @color-primary;
+            }
+        }
+
+        .body--splash &[data-viewport="true"] &__button {
+            opacity: 0;
+            transform: translate3d(-50%,-80%,0);
+            // prevent animation if there is a splash page
+        }
+
+        &[data-viewport="true"] &__button {
+            opacity: 1;
+            transform: translate3d(-50%,0,0);
+        }
+    }
+}
+
+.hero-mobile() {
+    .hero__button {
+        bottom: @gutter-mobile;
+    }
+}
+
+.hero-after-mobile() {
+}
+
+.hero-tablet() {
+    .hero__button {
+        bottom: @gutter-tablet;
+    }
+}
+
+.hero-tabletPortrait() {
+}
+
+.hero-tabletLandscape() {
+}
+
+.hero-after-tablet() {
+    .hero__button {
+        bottom: @gutter-laptop;
+    }
+}
+
+.hero-laptop() {
+}
+
+.hero-desktop() {
+    .hero__button {
+        bottom: @gutter-desktop;
+    }
+}
+
+.hero-between-laptop-desktop() {
+}
+

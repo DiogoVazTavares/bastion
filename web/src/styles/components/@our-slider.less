@@ -1,0 +1,50 @@
+/* Component our-slider */
+
+.our-slider-base() {
+    .our-slider {
+        &__slides {
+            transition: all ease-out 0.3s;
+
+            &--dragging {
+                transition: none;
+            }
+        }
+
+        & *[data-behavior='slider-next'], & *[data-behavior='slider-previous'] {
+            opacity: 1;
+            transition: opacity linear 0.5s;
+        }
+
+        &--last-slide *[data-behavior='slider-next'], &--first-slide *[data-behavior='slider-previous'] {
+            opacity: 0;
+            pointer-events: none;
+        }
+    }
+}
+
+.our-slider-mobile() {
+}
+
+.our-slider-after-mobile() {
+}
+
+.our-slider-tablet() {
+}
+
+.our-slider-tabletPortrait() {
+}
+
+.our-slider-tabletLandscape() {
+}
+
+.our-slider-after-tablet() {
+}
+
+.our-slider-laptop() {
+}
+
+.our-slider-desktop() {
+}
+.our-slider-between-laptop-desktop() {
+}
+

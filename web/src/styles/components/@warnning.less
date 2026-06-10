@@ -1,0 +1,75 @@
+/* Component warnning */
+@import "../@helpers.less";
+@import "../@variables.less";
+
+
+.warnning-base() {
+    @warnning-gutter: 20px;
+
+    .warning {
+        background-color: @color-primary;
+    }
+
+    .warning__inner {
+        display: flex;
+        flex-flow: row nowrap;
+        max-width: @header-max-width;
+        margin: 0 auto;
+        padding: @warnning-gutter/2 @warnning-gutter*2 8px @warnning-gutter*2;
+    }
+
+    .warnning__text {
+        flex-grow: 1;
+        color: white;
+        font-size: .8rem;
+        margin-right: @warnning-gutter;
+    }
+
+    .warnning__btn {
+        flex-grow: 0;
+        color: white;
+        font-size: .8rem;
+        white-space: nowrap;
+        cursor:pointer;
+    }
+}
+
+
+.warnning-mobile() {
+    .warnning__btn-text {
+        display: none;
+    }
+}
+
+
+.warnning-after-mobile() {
+}
+
+
+.warnning-tablet() {
+}
+
+
+.warnning-tabletPortrait() {
+}
+
+
+.warnning-tabletLandscape() {
+}
+
+
+.warnning-after-tablet() {
+}
+
+
+.warnning-laptop() {
+}
+
+
+.warnning-desktop() {
+}
+
+
+.warnning-between-laptop-desktop() {
+}
+

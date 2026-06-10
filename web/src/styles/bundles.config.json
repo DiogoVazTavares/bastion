@@ -1,0 +1,11 @@
+﻿{
+  "common": [
+    "./Styles/reset.css",
+    "./Styles/fonts.css",
+    "./Styles/main.css",
+    "./Styles/components.css"
+  ],
+  "custom-styles": [
+    "./Styles/custom-styles.css"
+  ]
+}

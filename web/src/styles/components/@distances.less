@@ -1,0 +1,171 @@
+/* Component distances */
+@import "../@helpers.less";
+@import "../@variables.less";
+
+.distances-base() {
+    .distances {
+        &__locations {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-self: flex-start;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        &__figure {
+            position: relative;
+
+            img {
+                max-width: 70%;
+            }
+
+            svg {
+                width: 100%;
+                height: 100%;
+
+                .st0 {
+                    fill: none;
+                    stroke: #FFFFFF;
+                    stroke-width: 3.51px;
+                }
+
+                .st1 {
+                    fill: none;
+                    stroke: #FFFFFF;
+                    stroke-width: 1.17px;
+                }
+
+                .line {
+                    fill: transparent;
+                    stroke: white;
+                    stroke-width: 3;
+                    stroke-dasharray: 620px;
+                    stroke-dashoffset: 0;
+                    transition: stroke-dashoffset 1s;
+                    -webkit-animation-play-state: running;
+                    /* firefox bug fix - won't rotate at 90deg angles */
+                    transform: rotate(180deg) translateY(-14px);
+                    transform-origin: center center;
+                }
+
+                .time {
+                    stroke: @color-primary;
+                    stroke-dashoffset: 620px;
+                    -webkit-animation-play-state: paused;
+                }
+            }
+        }
+
+        &__location {
+            flex-basis: 25%;
+            max-width: 25%;
+            flex-grow: 0;
+            margin-bottom: 40px;
+            box-sizing: border-box;
+        }
+
+        &__figure {
+            max-width: 250px;
+            margin: 0 auto;
+        }
+
+        &__location-timing {
+            left: 50%;
+            top: 50%;
+            color: white;
+            position: absolute;
+            font-size: 2.5rem;
+            transform: translate(-50%,-50%);
+
+            &:after {
+                content: "\2019";
+                position: absolute;
+                left: 100%;
+            }
+        }
+
+        &__location-legend {
+            margin-top: 20px;
+        }
+    }
+
+    .distances__nav {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .distances__link {
+        display: inline-block;
+        margin: 0 10px;
+    }
+}
+
+.distances-mobile() {
+    .distances {
+        &__locations {
+            padding: 0 @gutter-mobile/2;
+        }
+
+        &__location {
+            flex-basis: 50%;
+            max-width: 50%;
+            padding: 0 @gutter-mobile/2;
+        }
+    }
+}
+
+.distances-after-mobile() {
+}
+
+.distances-tablet() {
+    .distances {
+        &__locations {
+            padding: 0 @gutter-tablet/2;
+        }
+
+
+        &__location {
+            padding: 0 @gutter-tablet/2;
+        }
+    }
+}
+
+.distances-tabletPortrait() {
+}
+
+.distances-tabletLandscape() {
+}
+
+.distances-after-tablet() {
+}
+
+.distances-laptop() {
+    .distances {
+        &__locations {
+            padding: 0 @gutter-laptop/2;
+        }
+
+
+        &__location {
+            padding: 0 @gutter-laptop/2;
+        }
+    }
+}
+
+.distances-desktop() {
+    .distances {
+        &__locations {
+            padding: 0 @gutter-desktop/2;
+        }
+
+
+        &__location {
+            padding: 0 @gutter-desktop/2;
+        }
+    }
+}
+
+.distances-between-laptop-desktop() {
+}
+

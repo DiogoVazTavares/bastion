@@ -1,0 +1,49 @@
+---
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { fetchTerms } from '../../lib/strapi';
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const locales = ['en', 'fr', 'nl'];
+
+  const pages = await Promise.all(
+    locales.map(async (locale) => {
+      const terms = await fetchTerms(locale);
+      return { params: { locale }, props: { terms, locale } };
+    })
+  );
+
+  return pages;
+};
+
+const { terms, locale } = Astro.props;
+
+const bgClass: Record<string, string> = {
+  Lightgray: 'section--bg-light-gray',
+  Gray: 'section--bg-gray',
+  Green: 'section--bg-green',
+};
+const sectionClass = ['section', bgClass[terms.background_color]].filter(Boolean).join(' ');
+---
+
+<BaseLayout
+  title={terms.browser_title ?? terms.title ?? undefined}
+  description={terms.google_description ?? undefined}
+  locale={locale}
+  greenMenu={true}
+>
+  {terms.show && (
+    <div class={sectionClass}>
+      <article class="section__inner section__inner--terms">
+        {terms.show_title && terms.title && (
+          <h4 class="section__title">{terms.title}</h4>
+        )}
+        <div class="paragraph">
+          <div class="paragraph__content">
+            <Fragment set:html={terms.text ?? ''} />
+          </div>
+        </div>
+      </article>
+    </div>
+  )}
+</BaseLayout>

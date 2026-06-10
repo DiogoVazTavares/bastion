@@ -1,0 +1,294 @@
+/* Component map */
+@import "../@helpers.less";
+@import "../@variables.less";
+
+.map-base() {
+    @category-height: 30px;
+
+    .map {
+        &__inner {
+            color: white;
+            position: relative;
+        }
+
+        &__categories-dropdown-toggler {
+            position: absolute;
+            top: 0;
+            right: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 5;
+            cursor: pointer;
+        }
+
+        &__categories-dropdown {
+            z-index: 10;
+            transition: max-height 0.3s ease-in-out;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+
+            &&--open {
+                max-height: 100%;
+            }
+
+            &&--open &-toggler {
+                display: none;
+            }
+        }
+
+        &__categories {
+            display: flex;
+            flex-direction: column;
+
+
+            &:before, &:after {
+                content: "";
+                height: 20px; // adapt forresponsive
+                display: block;
+                background: @color-primary;
+            }
+        }
+
+        &__category {
+            cursor: pointer;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            display: block;
+            padding: 0 20px;
+            line-height: @category-height; // adapt for responsive
+            height: @category-height; // adapt for responsive
+            flex-basis: @category-height; // adapt for responsive
+            white-space: nowrap;
+            .texte-services();
+            color: @color-typo-gray;
+            cursor: pointer;
+            background: @color-primary;
+
+            &:before {
+                display: inline-block;
+                margin-right: 3px;
+            }
+
+            &:hover {
+                color: white;
+            }
+        }
+
+        &__category-title {
+            display: none;
+        }
+
+        &__category-title--active {
+            position: relative;
+            color: white;
+            order: -1; // go on top of reverse order
+            cursor: pointer;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            display: block;
+            line-height: 30px; // adapt for responsive
+            height: 30px; // adapt for responsive
+            flex-basis: 30px; // adapt for responsive
+            white-space: nowrap;
+            .texte-services();
+            color: white;
+            cursor: pointer;
+            background: @color-primary;
+            padding-top: 2px;
+            padding-bottom: 2px;
+            margin-bottom: 3px;
+
+            &:after {
+                font-family: "icons";
+                content: "\E820";
+                position: absolute;
+                top: 50%;
+                right: 10px;
+                transform: translateY(-50%);
+                color: white;
+                font-size: 2rem;
+            }
+        }
+
+
+        &__links {
+            z-index: 5;
+            box-sizing: border-box;
+        }
+
+        &__gmap {
+            height: 0;
+            padding-bottom: 56.25%;
+            margin-top: 40px;
+            flex-basis: 100%;
+        }
+
+        &__places-category {
+            display: none;
+
+            &--active {
+                display: block;
+            }
+        }
+
+        &__place {
+            position: relative;
+            padding-left: 20px;
+            margin-bottom: 4px;
+        }
+
+        &__place-number {
+            position: absolute;
+            left: 0;
+        }
+    }
+}
+
+.map-mobile() {
+    .map {
+        &__inner {
+            margin: @gutter-mobile @gutter-mobile 0;
+        }
+
+        
+        &__categories-dropdown {
+            max-height: 54px;
+            border: 1px #FFF solid;
+        }
+
+        &__category-title--active {
+            padding: 12px 20px;
+        }
+
+        &__links {
+            background: none;
+            color: white;
+            padding: 20px 0 0 0;
+        }
+    }
+}
+
+.map-after-mobile() {
+}
+
+.map-tablet() {
+    .map {
+        &__inner {
+            margin: @gutter-tablet @gutter-tablet 0;
+        }
+
+        &__categories-dropdown {
+            max-height: 62px;
+            border: 1px #FFF solid;
+        }
+
+        &__category-title--active {
+            padding: 16px 20px;
+        }
+
+        &__links {
+            background: none;
+            color: white;
+            padding: 20px 0 0 0;
+        }
+    }
+}
+
+.map-tabletPortrait() {
+}
+
+.map-tabletLandscape() {
+}
+
+.map-after-tablet() {
+    .map {
+    }
+}
+
+.map-laptop() {
+    .map {
+        &__inner {
+            margin: @gutter-laptop @gutter-laptop 0;
+        }
+
+        &__categories-dropdown {
+            max-height: 62px;
+
+            .no-touchevents & {
+                position: absolute;
+                top: 20px;
+                left: 20px;
+                width: 300px;
+                margin-bottom: 20px;
+            }
+
+            .touchevents & {
+                border: 1px #FFF solid;
+            }
+        }
+
+        &__category-title--active {
+            padding: 16px 20px;
+        }
+
+
+        &__links {
+            background: white;
+            color: @color-primary;
+            padding: 20px;
+
+            .no-touchevents & {
+                position: absolute;
+                top: 90px;
+                left: 20px;
+                width: 300px;
+            }
+        }
+    }
+}
+
+.map-desktop() {
+    .map {
+        &__inner {
+            margin: @gutter-desktop @gutter-desktop 0;
+        }
+
+        &__categories-dropdown {
+            max-height: 66px;
+
+            .no-touchevents & {
+                position: absolute;
+                top: 20px;
+                left: 20px;
+                width: 300px;
+                margin-bottom: 20px;
+            }
+
+            .touchevents & {
+                border: 1px #FFF solid;
+            }
+        }
+
+        &__category-title--active {
+            padding: 18px 20px;
+        }
+
+
+        &__links {
+            background: white;
+            color: @color-primary;
+            padding: 20px;
+
+            .no-touchevents & {
+                position: absolute;
+                top: 90px;
+                left: 20px;
+                width: 300px;
+            }
+        }
+    }
+}
+
+.map-between-laptop-desktop() {
+}

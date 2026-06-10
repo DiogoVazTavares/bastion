@@ -80,6 +80,9 @@ ssl
 .idea
 nbproject
 old/
+*/.env
+*/.env.production
+*/node_modules
 
 
 ############################
@@ -87,7 +90,6 @@ old/
 ############################
 
 cms/.tmp
-cms/.env
 cms/license.txt
 cms/exports
 cms/.strapi
@@ -109,7 +111,6 @@ cms/public/uploads/*
 */pids
 */logs
 */results
-*/node_modules
 */.node_history
 
 ############################
@@ -125,3 +126,11 @@ cms/.yarn/*
 !cms/.yarn/versions
 cms/.pnp.*
 cms/yarn-error.log
+
+
+############################
+# Astro
+############################
+
+web/dist/
+web/.astro/

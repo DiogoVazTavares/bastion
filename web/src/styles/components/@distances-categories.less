@@ -1,0 +1,54 @@
+/* Component distances-categories */
+@import "../@helpers.less";
+@import "../@variables.less";
+
+.distances-categories-base() {
+    .distances-categories {
+        text-align: center;
+        max-width: @panel-max-width;
+        margin: 0 auto;
+        margin-bottom: 40px;
+
+        &__link {
+            .introductions();
+            margin: 0 10px;
+            display: inline-block;
+            color: white;
+
+            & .our-slider__nav-item--current {
+                color: @color-primary;
+            }
+
+            .no-touchevents &:hover {
+                color: @color-primary;
+            }
+        }
+    }
+}
+
+.distances-categories-mobile() {
+}
+
+.distances-categories-after-mobile() {
+}
+
+.distances-categories-tablet() {
+}
+
+.distances-categories-tabletPortrait() {
+}
+
+.distances-categories-tabletLandscape() {
+}
+
+.distances-categories-after-tablet() {
+}
+
+.distances-categories-laptop() {
+}
+
+.distances-categories-desktop() {
+}
+.distances-categories-between-laptop-desktop() {
+}
+

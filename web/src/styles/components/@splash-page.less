@@ -1,0 +1,120 @@
+/* Component splash-page */
+@import "../@helpers.less";
+@import "../@variables.less";
+
+.splash-page-base() {
+    .splash-page {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 99999;
+        background: @color-primary;
+        transition: opacity 0.5s linear;
+        opacity: 1;
+
+        &.destroy {
+            opacity: 0;
+        }
+    }
+
+    .splash-page__inner {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate3d(-50%, -50%, 0);
+        background: @color-primary;
+
+        &:before {
+            position: absolute;
+            margin-bottom: -5px;
+            bottom: 100%;
+            left: -125vw;
+            right: -125vw;
+            height: 50vh;
+            background: @color-primary;
+            content: "";
+        }
+
+        &:after {
+            position: absolute;
+            margin-top: -5px;
+            top: 100%;
+            left: -125vw;
+            right: -125vw;
+            height: 50vh;
+            background: @color-primary;
+            content: "";
+        }
+    }
+
+    .splash-page__wrapper {
+        display: inline-block;
+
+        &:before {
+            top: 0;
+            width: 50vw;
+            background: @color-primary;
+            content: "";
+            position: absolute;
+            margin-right: -5px;
+            right: 100%;
+            bottom: 0;
+        }
+
+        &:after {
+            top: 0;
+            width: 50vw;
+            background: @color-primary;
+            content: "";
+            position: absolute;
+            margin-left: -5px;
+            left: 100%;
+            bottom: 0;
+        }
+    }
+
+    .splash-page__legend {
+        color: @color-background;
+    }
+}
+
+.splash-page-mobile() {
+    .splash-page__wrapper svg {
+        width: 300px;
+        height: 250px;
+    }
+}
+
+.splash-page-after-mobile() {
+}
+
+.splash-page-tablet() {
+    .splash-page__wrapper svg {
+        width: 500px;
+        height: 250px;
+    }
+}
+
+.splash-page-tabletPortrait() {
+}
+
+.splash-page-tabletLandscape() {
+}
+
+.splash-page-after-tablet() {
+    .splash-page__wrapper svg {
+        width: 800px;
+        height: 250px;
+    }
+}
+
+.splash-page-laptop() {
+}
+
+.splash-page-desktop() {
+}
+.splash-page-between-laptop-desktop() {
+}
+

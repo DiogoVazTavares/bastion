@@ -1,0 +1,504 @@
+/* Component checkers */
+@import "../@helpers.less";
+@import "../@variables.less";
+
+.checkers-base() {
+    .checkers {
+        &__inner {
+            display: flex;
+            position: relative;
+            flex-wrap: wrap;
+        }
+
+        &__item {
+            position: relative;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        &__item[data-spy-enter-viewport] {
+            transform: translateY(10vh);
+            opacity: 0;
+            transition: all ease-out 1s 0.5s;
+        }
+
+        &__item[data-enter-viewport=true] {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        &__checker-text {
+            .introductions();
+        }
+
+        .touchevents &__checker-text {
+            background: white;
+            color: @color-primary;
+        }
+
+        .touchevents &--home &__checker-text {
+            position: relative;
+        }
+
+        &__checker {
+            height: 0;
+            transition: all ease 0.2s;
+
+            &--big {
+                position: relative;
+                padding-bottom: 138%;
+            }
+
+            &--small {
+                position: relative;
+                padding-bottom: 69%;
+            }
+        }
+
+        &__item:nth-child(2n+2) &__checker {
+            transition-delay: 0.5s;
+        }
+
+        &--home &__checker {
+            position: relative;
+            padding-bottom: 69%;
+        }
+
+        .no-touchevents &--home &__checker-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            color: white;
+            opacity: 0;
+            z-index: 0;
+            background: @color-background-services;
+            transition: all .2s cubic-bezier(.66,.04,1,1);
+        }
+
+        .no-touchevents &--home .checkers__item-inner:hover &__checker-text {
+            opacity: 1;
+            z-index: 2;
+        }
+
+        .no-touchevents &--home &__checker-text-inner {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            transform: translateY(30px);
+            transition: all .2s cubic-bezier(.66,.04,1,1);
+            box-sizing: border-box;
+        }
+
+        .no-touchevents &--home .checkers__item-inner:hover &__checker-text-inner {
+            transform: translateY(0);
+        }
+
+        &--services .checkers__item-inner {
+            overflow: hidden;
+            position: relative;
+        }
+
+        &--services &__checker--big &__content {
+            z-index: 20;
+            transition: all 1s ease;
+        }
+
+        &--services &__checker--small &__content {
+            z-index: 20;
+            transition: all .5s ease;
+        }
+
+        .no-touchevents &__close-icon, .no-touchevents &__open-icon {
+            display: none;
+        }
+
+        &--home &__close-icon, &--home &__open-icon {
+            display: none;
+        }
+
+        .touchevents &__close-icon, .touchevents &__open-icon {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+        }
+
+        .touchevents &__close-icon {
+            z-index: 1;
+        }
+
+        .touchevents &__open-icon {
+            z-index: 999;
+        }
+
+        &--services &__checker-text-inner {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            box-sizing: border-box;
+            background-color: @color-primary;
+            color: white;
+        }
+
+        .no-touchevents &--services .checkers__item-inner:hover &__content, .touchevents &--services .checkers__item-inner--hover &__content {
+            transform: translateY(-100%);
+        }
+
+        .no-touchevents &--services .checkers__item-inner:hover &__checker-text-inner {
+        }
+
+        &__content {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            top: 0;
+            left: 0;
+            background-color: white;
+        }
+
+        &__checker {
+            &--bg-light-gray .checkers__content {
+                background-color: @color-background-light-gray;
+            }
+
+            &--bg-light-gray .checkers__title {
+                color: @color-primary;
+            }
+
+            &--bg-gray .checkers__content {
+                background-color: @color-background-gray;
+            }
+
+            &--bg-gray .checkers__title {
+                color: @color-primary;
+            }
+
+
+            &--bg-green .checkers__content {
+                background-color: @color-primary;
+                color: white;
+            }
+
+            &--bg-green .checkers__title {
+                color: white;
+            }
+        }
+
+        &__image {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            object-fit: cover;
+        }
+
+        &__image-overlay {
+            position: absolute;
+            height: 100%;
+            width: 100%;
+            top: 0;
+            left: 0;
+            /*background-color: rgba(38, 67, 64, .2);*/
+            background-color: rgba(20,20,20,.3);
+            z-index: 1;
+        }
+
+        &__icon {
+            position: absolute;
+            z-index: 1;
+            width: 25%;
+        }
+
+        &__title {
+            position: absolute;
+            z-index: 2;
+            font-size: 1rem;
+            color: @color-primary;
+            .text-uppercase();
+        }
+
+        &__checker-text-title {
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: .05rem
+        }
+
+        &__open-icon, &__close-icon {
+            /*z-index: 2;*/
+            font-size: 1.6rem;
+            color: white;
+
+            .checkers__with-icon & {
+                color: @color-primary;
+            }
+        }
+
+        &__button {
+            border: 1px solid @color-primary;
+        }
+
+        .no-touchevents &--home &__button {
+            position: absolute;
+        }
+
+        .no-touchevents &--services &__button {
+            display: inline-block;
+        }
+
+        .touchevents &__button {
+            display: inline-block;
+        }
+
+        .no-touchevents &__button, .touchevents &--services &__button {
+            color: white;
+            border-color: white;
+        }
+
+        .no-touchevents &__button:hover, .touchevents &--services &__button:hover {
+            background-color: white;
+            color: @color-primary;
+        }
+    }
+}
+
+.checkers-mobile() {
+    .checkers {
+        &__item {
+            // flex: 0 0 100%;
+            flex-basis: 100%;
+            flex-grow: 0;
+            flex-shrink: 0;
+            max-width: 100%;
+        }
+
+        .touchevents &__close-icon:before, .touchevents &__open-icon:before {
+            position: absolute;
+            top: @gutter-mobile;
+            right: @gutter-mobile;
+            transform: translateY(-25%);
+        }
+
+        &__checker-text-inner {
+            .no-touchevents & {
+                padding: @gutter-mobile @gutter-mobile @gutter-mobile @gutter-mobile;
+            }
+
+            .touchevents & {
+                padding: @gutter-mobile @gutter-mobile @gutter-mobile @gutter-mobile;
+            }
+        }
+
+        &__icon {
+            bottom: @gutter-mobile;
+            left: @gutter-mobile;
+        }
+
+        &__title {
+            top: @gutter-mobile;
+            left: @gutter-mobile;
+        }
+
+        &__checker-text-title {
+            margin-bottom: @gutter-mobile/2;
+        }
+
+        &__button {
+            padding: 12px;
+        }
+
+        .no-touchevents &--home &__button {
+            bottom: @gutter-mobile;
+            left: @gutter-mobile;
+        }
+
+        .no-touchevents &--services &__button {
+            margin-top: @gutter-mobile/2;
+        }
+
+        .touchevents &__button {
+            margin-top: @gutter-mobile/2;
+        }
+
+        &__checker-paragraph {
+            font-size: 4vw;
+        }
+    }
+}
+
+.checkers-after-mobile() {
+    .checkers__item {
+        // flex: 0 0 50%;
+        flex-basis: 50%;
+        flex-grow: 0;
+        flex-shrink: 0;
+        max-width: 50%;
+    }
+}
+
+.checkers-tablet() {
+    .checkers__checker-text-inner {
+        .no-touchevents & {
+            padding: @gutter-tablet @gutter-tablet @gutter-tablet @gutter-tablet;
+        }
+
+        .touchevents & {
+            padding: @gutter-tablet @gutter-tablet @gutter-tablet @gutter-tablet;
+        }
+    }
+
+    .checkers__icon {
+        bottom: @gutter-tablet;
+        left: @gutter-tablet;
+    }
+
+    .checkers__title {
+        top: @gutter-tablet;
+        left: @gutter-tablet;
+    }
+
+    .checkers__checker-text-title {
+        margin-bottom: @gutter-tablet/2;
+    }
+
+    .touchevents .checkers__close-icon:before, .touchevents .checkers__open-icon:before {
+        position: absolute;
+        top: @gutter-tablet;
+        right: @gutter-tablet;
+        transform: translateY(-25%);
+    }
+
+    .checkers__button {
+        padding: 16px;
+    }
+
+    .no-touchevents .checkers--home .checkers__button {
+        bottom: @gutter-tablet;
+        left: @gutter-tablet;
+    }
+
+    .no-touchevents .checkers--services .checkers__button {
+        margin-top: @gutter-tablet/2;
+    }
+
+    .touchevents .checkers__button {
+        margin-top: @gutter-tablet/2;
+    }
+
+    .checkers__checker-paragraph {
+        font-size: 2vw;
+    }
+}
+
+.checkers-tabletPortrait() {
+}
+
+.checkers-tabletLandscape() {
+}
+
+.checkers-after-tablet() {
+}
+
+.checkers-laptop() {
+    .checkers__checker-text-inner {
+        padding: @gutter-laptop @gutter-laptop @gutter-laptop @gutter-laptop;
+    }
+
+    .checkers__icon {
+        bottom: @gutter-laptop;
+        left: @gutter-laptop;
+    }
+
+    .checkers__title {
+        top: @gutter-laptop;
+        left: @gutter-laptop;
+    }
+
+    .checkers__checker-text-title {
+        margin-bottom: @gutter-laptop/2;
+    }
+
+    .touchevents .checkers__close-icon:before, .touchevents .checkers__open-icon:before {
+        position: absolute;
+        top: @gutter-laptop;
+        right: @gutter-laptop;
+        transform: translateY(-25%);
+    }
+
+    .checkers__button {
+        padding: 16px;
+    }
+
+    .no-touchevents .checkers--home .checkers__button {
+        bottom: @gutter-laptop;
+        left: @gutter-laptop;
+    }
+
+    .no-touchevents .checkers--services .checkers__button {
+        margin-top: @gutter-laptop/2;
+    }
+
+    .touchevents .checkers__button {
+        margin-top: @gutter-laptop/2;
+    }
+
+    .checkers__checker-paragraph {
+        font-size: 2vw;
+    }
+}
+
+.checkers-desktop() {
+    .checkers__checker-text-inner {
+        padding: @gutter-desktop @gutter-desktop @gutter-desktop @gutter-desktop;
+    }
+
+    .checkers__icon {
+        bottom: @gutter-desktop;
+        left: @gutter-desktop;
+    }
+
+    .checkers__title {
+        top: @gutter-desktop;
+        left: @gutter-desktop;
+    }
+
+    .checkers__checker-text-title {
+        margin-bottom: @gutter-desktop/2;
+    }
+
+    .touchevents .checkers__close-icon:before, .touchevents .checkers__open-icon:before {
+        position: absolute;
+        top: @gutter-desktop;
+        right: @gutter-desktop;
+        transform: translateY(-25%);
+    }
+
+    .checkers__button {
+        padding: 20px;
+    }
+
+    .no-touchevents .checkers--home .checkers__button {
+        bottom: @gutter-desktop;
+        left: @gutter-desktop;
+    }
+
+    .no-touchevents .checkers--services .checkers__button {
+        margin-top: @gutter-desktop/2;
+    }
+
+    .touchevents .checkers__button {
+        margin-top: @gutter-desktop/2;
+    }
+}
+
+.checkers-between-laptop-desktop() {
+}
+

@@ -1,0 +1,67 @@
+{
+  "path": "Styles",
+  "components": [
+    "main",
+    "header",
+    "contact",
+    "menu",
+    "hero",
+    "checkers",
+    "slider",
+    "info",
+    "splash-page",
+    "paragraph",
+    "paragraph-image",
+    "distances-categories",
+    "section",
+    "building",
+    "partners",
+    "header",
+    "our-lightbox",
+    "lightbox",
+    "map",
+    "map-info-window",
+    "floors",
+    "warnning",
+    "our-slider",
+    "button",
+    "icon",
+    "footer",
+    "building",
+    "distances"
+  ],
+  "platforms": {
+    "base": {},
+
+    "mobile": { "max": "768px" },
+
+    "after-mobile": { "min": "769px" },
+
+    "tablet": {
+      "min": "769px",
+      "max": "1024px"
+    },
+    "tabletPortrait": {
+      "min": "769px",
+      "max": "1024px",
+      "query": "orientation:portrait"
+    },
+    "tabletLandscape": {
+      "min": "769px",
+      "max": "1024px",
+      "query": "orientation:landscape"
+    },
+    "after-tablet": { "min": "1025px" },
+    "laptop": {
+      "min": "1025px",
+      "max": "1600px"
+    },
+    "between-laptop-desktop": {
+      "min": "1025px",
+      "max": "1100px"
+    },
+    "desktop": {
+      "min": "1601px"
+    }
+  }
+}

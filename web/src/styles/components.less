@@ -1,0 +1,52 @@
+@import "platforms/@base.less";
+@import "platforms/@mobile.less";
+@import "platforms/@after-mobile.less";
+@import "platforms/@tablet.less";
+@import "platforms/@tabletPortrait.less";
+@import "platforms/@tabletLandscape.less";
+@import "platforms/@after-tablet.less";
+@import "platforms/@laptop.less";
+@import "platforms/@between-laptop-desktop.less";
+@import "platforms/@desktop.less";
+
+
+@media screen  {
+	.base();
+}
+
+@media screen  and (max-width: 768px) {
+	.mobile();
+}
+
+@media screen  and (min-width: 769px) {
+	.after-mobile();
+}
+
+@media screen  and (min-width: 769px) and (max-width: 1024px) {
+	.tablet();
+}
+
+@media screen  and (min-width: 769px) and (max-width: 1024px) and (orientation:portrait) {
+	.tabletPortrait();
+}
+
+@media screen  and (min-width: 769px) and (max-width: 1024px) and (orientation:landscape) {
+	.tabletLandscape();
+}
+
+@media screen  and (min-width: 1025px) {
+	.after-tablet();
+}
+
+@media screen  and (min-width: 1025px) and (max-width: 1600px) {
+	.laptop();
+}
+
+@media screen  and (min-width: 1025px) and (max-width: 1100px) {
+	.between-laptop-desktop();
+}
+
+@media screen  and (min-width: 1601px) {
+	.desktop();
+}
+

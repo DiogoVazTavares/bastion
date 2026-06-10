@@ -1,0 +1,32 @@
+---
+import '../styles/index.less';
+import SiteHeader from '../components/SiteHeader.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  locale?: string;
+  greenMenu?: boolean;
+}
+
+const { title = 'Bastion Tower', description, locale = 'en', greenMenu = false } = Astro.props;
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="stylesheet" href="/custom-styles.css" />
+    {title && <title>{title}</title>}
+    {description && <meta name="description" content={description} />}
+  </head>
+  <body>
+    <div class="container">
+      <SiteHeader locale={locale} greenMenu={greenMenu} />
+      <slot />
+    </div>
+  </body>
+</html>

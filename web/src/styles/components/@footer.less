@@ -1,0 +1,68 @@
+/* Component footer */
+@import "../@helpers.less";
+@import "../@variables.less";
+
+
+.footer-base() {
+    .footer__inner {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        .notes-footer();
+    }
+}
+
+
+.footer-mobile() {
+    .footer__inner {
+        height: 70px;
+        padding: 0 @gutter-mobile;
+    }
+}
+
+
+.footer-after-mobile() {
+}
+
+
+.footer-tablet() {
+    .footer__inner {
+        height: 60px;
+        padding: 0 @gutter-tablet;
+    }
+}
+
+
+.footer-tabletPortrait() {
+}
+
+
+.footer-tabletLandscape() {
+}
+
+
+.footer-after-tablet() {
+}
+
+
+.footer-laptop() {
+    .footer__inner {
+        height: 60px;
+        padding: 0 @gutter-laptop;
+    }
+}
+
+
+.footer-desktop() {
+    .footer__inner {
+        height: 60px;
+        padding: 0 @gutter-desktop;
+    }
+}
+
+
+.footer-between-laptop-desktop() {
+}
+

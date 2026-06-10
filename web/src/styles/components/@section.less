@@ -1,0 +1,149 @@
+/* Component section */
+@import "../@helpers.less";
+@import "../@variables.less";
+
+.section-base() {
+    .section[data-spy-enter-viewport] .section__inner {
+        transform: translateY(20vh);
+        opacity: 0;
+        transition: all ease-out 1s;
+    }
+
+    .section[data-enter-viewport=true] .section__inner {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    .section__title {
+        text-align: center;
+        .text-uppercase();
+    }
+
+    .section--bg-light-gray {
+        background-color: @color-background-light-gray;
+    }
+
+    .section--bg-gray {
+        background-color: @color-background-gray;
+    }
+
+    .section--bg-green {
+        background-color: @color-primary;
+        color: white;
+    }
+}
+
+.section-mobile() {
+    .section__inner {
+        padding: @gutter-mobile 0;
+
+        &--building {
+            padding: 0;
+        }
+
+        &--checkers {
+            padding-bottom: 0;
+        }
+
+        &--terms {
+            margin-top: 62px;
+        }
+    }
+
+    .section__title {
+        margin-bottom: @gutter-mobile/2;
+    }
+}
+
+.section-after-mobile() {
+}
+
+.section-tablet() {
+    .section__inner {
+        padding: @gutter-tablet 0;
+
+        &--building {
+            padding: 0;
+        }
+
+        &--checkers {
+            padding-bottom: 0;
+        }
+
+        &--slider {
+            padding-bottom: 0;
+        }
+
+        &--terms {
+            margin-top: 78px;
+        }
+    }
+
+    .section__title {
+        margin-bottom: @gutter-tablet/2;
+    }
+}
+
+.section-tabletPortrait() {
+}
+
+.section-tabletLandscape() {
+}
+
+.section-after-tablet() {
+}
+
+.section-laptop() {
+    .section__inner {
+        padding: @gutter-laptop 0;
+
+        &--building {
+            padding: 0;
+        }
+
+        &--checkers {
+            padding-bottom: 0;
+        }
+
+        &--slider {
+            padding-bottom: 0;
+        }
+
+        &--terms {
+            margin-top: 125px;
+        }
+    }
+
+    .section__title {
+        margin-bottom: @gutter-laptop/2;
+    }
+}
+
+.section-desktop() {
+    .section__inner {
+        padding: @gutter-desktop 0;
+
+        &--building {
+            padding: 0;
+        }
+
+        &--checkers {
+            padding-bottom: 0;
+        }
+
+        &--slider {
+            padding-bottom: 0;
+        }
+
+        &--terms {
+            margin-top: 125px;
+        }
+    }
+
+    .section__title {
+        margin-bottom: @gutter-desktop/2;
+    }
+}
+.section-between-laptop-desktop() {
+}
+

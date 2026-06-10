@@ -1,0 +1,68 @@
+/* Component paragraph */
+@import "../@helpers.less";
+@import "../@variables.less";
+
+.paragraph-base() {
+    .paragraph--hero {
+        font-size: 1.6rem;
+    }
+
+    .paragraph__content {
+        max-width: @panel-max-width;
+        margin: 0 auto;
+        padding: 0 @gutter-desktop 0 @gutter-desktop;
+        box-sizing: border-box;
+    }
+}
+
+
+.paragraph-mobile() {
+
+    .paragraph__content, .section__title {
+        padding: 0 @gutter-mobile 0 @gutter-mobile;
+    }
+}
+
+
+.paragraph-after-mobile() {
+}
+
+
+.paragraph-tablet() {
+
+    .paragraph__content, .section__title {
+        padding: 0 @gutter-tablet 0 @gutter-tablet;
+    }
+}
+
+
+.paragraph-tabletPortrait() {
+}
+
+
+.paragraph-tabletLandscape() {
+}
+
+
+.paragraph-after-tablet() {
+}
+
+
+.paragraph-laptop() {
+
+    .paragraph__content, .section__title {
+        padding: 0 @gutter-laptop 0 @gutter-laptop;
+    }
+}
+
+
+.paragraph-desktop() {
+
+    .paragraph__content, .section__title {
+        padding: 0 @gutter-desktop 0 @gutter-desktop;
+    }
+}
+
+.paragraph-between-laptop-desktop() {
+}
+

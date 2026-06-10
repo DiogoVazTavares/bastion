@@ -1,0 +1,94 @@
+/* Component partners */
+@import "../@helpers.less";
+@import "../@variables.less";
+
+
+.partners-base() {
+    .partners {
+        &__inner {
+            overflow: hidden;
+        }
+
+        &__slides {
+            display: flex;
+        }
+
+        &__figure {
+            // flex: 0 0 25%;
+            flex-basis: 25%;
+            flex-grow: 0;
+            flex-shrink: 0;
+            max-width: 25%;
+            box-sizing: border-box;
+        }
+
+        &__image {
+            max-width: 100%;
+        }
+    }
+}
+
+
+.partners-mobile() {
+    .partners {
+        
+        &__figure {
+            // flex: 0 0 50%;
+            flex-basis: 50%;
+            flex-grow: 0;
+            flex-shrink: 0;
+            max-width: 50%;
+            padding: 0 @gutter-mobile;
+        }
+    }
+}
+
+
+.partners-after-mobile() {
+}
+
+
+.partners-tablet() {
+    .partners {
+
+        &__figure {
+            padding: 0 @gutter-tablet;
+        }
+    }
+}
+
+
+.partners-tabletPortrait() {
+}
+
+
+.partners-tabletLandscape() {
+}
+
+
+.partners-after-tablet() {
+}
+
+
+.partners-laptop() {
+    .partners {
+
+        &__figure {
+            padding: 0 @gutter-laptop;
+        }
+    }
+}
+
+
+.partners-desktop() {
+    .partners {
+
+        &__figure {
+            padding: 0 @gutter-desktop;
+        }
+    }
+}
+
+.partners-between-laptop-desktop() {
+}
+
