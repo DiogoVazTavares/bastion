@@ -1,0 +1,6 @@
+name = "bastion"
+compatibility_date = "2026-06-11"
+pages_build_output_dir = "dist"
+[[kv_namespaces]]
+binding = "SESSION"
+id = "6a9a5e4c62214eb98fba7f41cd7a0724"
