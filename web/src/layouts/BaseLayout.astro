@@ -1,6 +1,7 @@
 ---
 import '../styles/index.less';
 import SiteHeader from '../components/SiteHeader.astro';
+import { fetchContact, fetchTerms, fetchCredits } from '../lib/strapi';
 
 interface Props {
   title?: string;
@@ -10,6 +11,12 @@ interface Props {
 }
 
 const { title = 'Bastion Tower', description, locale = 'en', greenMenu = false } = Astro.props;
+
+const [contact, terms, credits] = await Promise.all([
+  fetchContact(locale),
+  fetchTerms(locale),
+  fetchCredits(locale).catch(() => null),
+]);
 ---
 
 <!doctype html>
@@ -27,6 +34,23 @@ const { title = 'Bastion Tower', description, locale = 'en', greenMenu = false }
     <div class="container">
       <SiteHeader locale={locale} greenMenu={greenMenu} />
       <slot />
+      <section class="section section--bg-green">
+        <div class="contact section__inner" id="contact">
+          <h1 class="section__title contact--section-title">
+            {contact.title}
+          </h1>
+          <div class="contact__text">
+            <Fragment set:html={contact.text ?? ''} />
+            <a href="javascript:void(9)" class="icon icon--arrow-circle-top contact__button contact__button--rouded" data-behavior="scroll-to-top"></a>
+          </div>
+        </div>
+      </section>
+      <footer class="footer">
+        <div class="footer__inner">
+          <a href={`/${locale}/terms`} class="footer__link">{terms.footer_title}</a>
+          {credits && <a href={`/${locale}/credits`} class="footer__link">{credits.footer_title}</a>}
+        </div>
+      </footer>
     </div>
   </body>
 </html>
