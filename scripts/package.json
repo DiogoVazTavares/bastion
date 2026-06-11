@@ -6,6 +6,9 @@
   "engines": {
     "node": ">=20"
   },
+  "scripts": {
+    "test": "node --test lib/*.test.js"
+  },
   "dependencies": {
     "mongodb": "^3.7.0"
   }
