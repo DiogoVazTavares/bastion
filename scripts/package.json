@@ -7,7 +7,11 @@
     "node": ">=20"
   },
   "scripts": {
-    "test": "node --test lib/*.test.js"
+    "test": "node --test lib/*.test.js",
+    "migrate:terms:local": "node --env-file=.env mongo-to-strapi.js",
+    "migrate:terms:prod": "node --env-file=.env.production mongo-to-strapi.js",
+    "migrate:contact:local": "node --env-file=.env migrate-contact.js",
+    "migrate:contact:prod": "node --env-file=.env.production migrate-contact.js"
   },
   "dependencies": {
     "mongodb": "^3.7.0"
