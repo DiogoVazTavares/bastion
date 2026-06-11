@@ -1,21 +1,33 @@
 import {
+  type Preset,
+  StrapiMediaLib,
+  StrapiUploadAdapter,
+  setPluginConfig,
+} from '@_sh/strapi-plugin-ckeditor';
+import {
+  Alignment,
   Bold,
-  Italic,
-  Underline,
   Essentials,
+  GeneralHtmlSupport,
   Heading,
-  List,
+  Italic,
   Link,
+  List,
   Paragraph,
   SourceEditing,
   Style,
-  GeneralHtmlSupport,
+  Underline,
 } from 'ckeditor5';
-import { setPluginConfig, StrapiMediaLib, StrapiUploadAdapter } from '@_sh/strapi-plugin-ckeditor';
+// Loaded as a raw string (Vite ?raw) so the editor previews the 8 custom styles.
+// Mirrors public/custom-styles.css, which the public site also serves to the rendered HTML.
+import customStyles from '../../public/custom-styles.css?raw';
 
-const bastionPreset = {
+const bastionPreset: Preset = {
   name: 'bastion',
   description: 'Bastion HTML editor with custom styles',
+  // Applied to the editing area after the theme — the CKEditor 5 / plugin equivalent
+  // of CKEditor 4's `contentsCss`.
+  styles: customStyles,
   editorConfig: {
     licenseKey: 'GPL',
     plugins: [
@@ -32,6 +44,7 @@ const bastionPreset = {
       GeneralHtmlSupport,
       StrapiMediaLib,
       StrapiUploadAdapter,
+      Alignment,
     ],
     toolbar: [
       'heading',
@@ -42,6 +55,10 @@ const bastionPreset = {
       '|',
       'style',
       '|',
+      'alignment:left',
+      'alignment:right',
+      'alignment:center',
+      'alignment:justify',
       'bulletedList',
       'numberedList',
       '|',
@@ -56,21 +73,18 @@ const bastionPreset = {
     style: {
       definitions: [
         { name: 'Smallcaps titles', element: 'span', classes: ['smallcaps-titles'] },
-        { name: 'Text list',        element: 'span', classes: ['text-list'] },
-        { name: 'Titles',           element: 'span', classes: ['titles'] },
-        { name: 'Big text',         element: 'span', classes: ['big-text'] },
-        { name: 'Introduction',     element: 'span', classes: ['introduction'] },
-        { name: 'Caption',          element: 'span', classes: ['caption'] },
-        { name: 'Dark Button',      element: 'span', classes: ['button', 'paragraph-image__button'] },
-        { name: 'White Button',     element: 'span', classes: ['contact__button'] },
+        { name: 'Text list', element: 'span', classes: ['text-list'] },
+        { name: 'Titles', element: 'span', classes: ['titles'] },
+        { name: 'Big text', element: 'span', classes: ['big-text'] },
+        { name: 'Introduction', element: 'span', classes: ['introduction'] },
+        { name: 'Caption', element: 'span', classes: ['caption'] },
+        { name: 'Dark Button', element: 'span', classes: ['button', 'paragraph-image__button'] },
+        { name: 'White Button', element: 'span', classes: ['contact__button'] },
       ],
     },
     htmlSupport: {
-      allow: [
-        { name: /.*/, attributes: true, classes: true, styles: true },
-      ],
+      allow: [{ name: /.*/, attributes: true, classes: true, styles: true }],
     },
-    contentsCss: ['/custom-styles.css'],
   },
 };
 

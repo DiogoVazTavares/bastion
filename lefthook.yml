@@ -1,0 +1,22 @@
+# Git hooks for the bastion monorepo.
+# Installed via `lefthook install` (runs automatically on `npm install` at the repo root).
+#
+# Split by cost:
+#   pre-commit → fast, staged-files only (Biome lint + format)
+#   pre-push   → slower, whole-project type-check (tsc)
+
+pre-commit:
+  parallel: true
+  commands:
+    cms-check:
+      # Scope to the Strapi project; {staged_files} become relative to this root.
+      root: 'cms/'
+      glob: '*.{ts,tsx,js,jsx,json,jsonc}'
+      run: npx biome check --write --no-errors-on-unmatched {staged_files}
+      stage_fixed: true
+
+pre-push:
+  commands:
+    cms-typecheck:
+      root: 'cms/'
+      run: npm run typecheck
