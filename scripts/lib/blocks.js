@@ -12,6 +12,11 @@ export function mapBackgroundColor(raw) {
  * Does not mutate the input.
  */
 export function applyNonLocalised(payloads, nonLocalisedFields) {
+  if (!payloads.en) {
+    throw new Error(
+      'applyNonLocalised: payloads must include an "en" entry to source non-localised field values'
+    );
+  }
   const enValues = Object.fromEntries(
     nonLocalisedFields.map(f => [f, payloads.en[f]])
   );

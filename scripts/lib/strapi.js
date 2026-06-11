@@ -6,7 +6,9 @@
  */
 
 function strapiUrl() {
-  return (process.env.STRAPI_URL ?? '').replace(/\/$/, '');
+  const url = process.env.STRAPI_URL;
+  if (!url) throw new Error('STRAPI_URL env var is not set — call validateStrapiEnv() at startup');
+  return url.replace(/\/$/, '');
 }
 
 function authHeaders() {
@@ -29,6 +31,8 @@ export function validateStrapiEnv() {
 /**
  * PUT data for a locale on a Strapi single-type.
  * Falls back to POST /localizations when the locale variant does not exist yet.
+ * Note: a 404 on a mistyped singleType also reaches the fallback; the subsequent
+ * POST will then fail with a more specific error.
  */
 export async function putLocale(singleType, locale, data) {
   const url = `${strapiUrl()}/api/${singleType}?locale=${locale}`;
@@ -38,18 +42,17 @@ export async function putLocale(singleType, locale, data) {
     body: JSON.stringify({ data }),
   });
 
-  const json = await res.json();
-
   if (!res.ok) {
     if (res.status === 404) {
       return createLocalization(singleType, locale, data);
     }
+    const body = await res.text();
     throw new Error(
-      `Strapi PUT /${singleType}?locale=${locale} failed (${res.status}):\n${JSON.stringify(json, null, 2)}`
+      `Strapi PUT /${singleType}?locale=${locale} failed (${res.status}):\n${body}`
     );
   }
 
-  return json;
+  return res.json();
 }
 
 async function createLocalization(singleType, locale, data) {
@@ -60,13 +63,13 @@ async function createLocalization(singleType, locale, data) {
     body: JSON.stringify({ ...data, locale }),
   });
 
-  const json = await res.json();
   if (!res.ok) {
+    const body = await res.text();
     throw new Error(
-      `Strapi POST /${singleType}/localizations for ${locale} failed (${res.status}):\n${JSON.stringify(json, null, 2)}`
+      `Strapi POST /${singleType}/localizations for ${locale} failed (${res.status}):\n${body}`
     );
   }
-  return json;
+  return res.json();
 }
 
 /**
@@ -84,10 +87,15 @@ export async function uploadMedia(filename, buffer, mimeType) {
     body: form,
   });
 
-  const json = await res.json();
   if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Strapi upload of '${filename}' failed (${res.status}):\n${body}`);
+  }
+
+  const json = await res.json();
+  if (!Array.isArray(json) || json.length === 0) {
     throw new Error(
-      `Strapi upload of '${filename}' failed (${res.status}):\n${JSON.stringify(json, null, 2)}`
+      `Strapi upload of '${filename}' returned an unexpected response: ${JSON.stringify(json)}`
     );
   }
   return json[0];

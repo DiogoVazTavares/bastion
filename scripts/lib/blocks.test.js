@@ -52,3 +52,10 @@ test('applyNonLocalised preserves localised fields unchanged', () => {
   assert.equal(result.en.title, 'Hello');
   assert.equal(result.fr.title, 'Bonjour');
 });
+
+test('applyNonLocalised throws with actionable message when en payload is absent', () => {
+  assert.throws(
+    () => applyNonLocalised({ fr: { title: 'Bonjour' } }, ['background_color']),
+    /must include an "en" entry/
+  );
+});

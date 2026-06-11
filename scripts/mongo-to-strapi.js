@@ -16,25 +16,15 @@
  *   node mongo-to-strapi.js
  */
 
-import { fetchLocaleDocuments } from './lib/mongo.js';
+import { LOCALES, fetchLocaleDocuments } from './lib/mongo.js';
 import { validateStrapiEnv, putLocale } from './lib/strapi.js';
-import { mapBackgroundColor, applyNonLocalised } from './lib/blocks.js';
-
-// ---------------------------------------------------------------------------
-// Config
-// ---------------------------------------------------------------------------
-
-const LOCALES = ['en', 'fr', 'nl'];
+import { buildTermsPayloads } from './lib/terms.js';
 
 const MONGO_URLS = {
   en: process.env.MONGO_URL_EN,
   fr: process.env.MONGO_URL_FR,
   nl: process.env.MONGO_URL_NL,
 };
-
-// ---------------------------------------------------------------------------
-// Validation
-// ---------------------------------------------------------------------------
 
 function validateEnv() {
   const missing = LOCALES.filter(l => !MONGO_URLS[l]).map(l => `MONGO_URL_${l.toUpperCase()}`);
@@ -45,41 +35,17 @@ function validateEnv() {
   validateStrapiEnv();
 }
 
-// ---------------------------------------------------------------------------
-// Field mapping  (C# PascalCase → Strapi snake_case)
-// ---------------------------------------------------------------------------
-
-function buildLocalePayloads(docs) {
-  const payloads = Object.fromEntries(
-    LOCALES.map(locale => {
-      const doc = docs[locale];
-      return [locale, {
-        title:              doc.Title             ?? null,
-        text:               doc.Text              ?? null,
-        show:               doc.Show              ?? true,
-        show_title:         doc.ShowTitle         ?? true,
-        footer_title:       doc.FooterTitle       ?? null,
-        browser_title:      doc.BrowserTitle      ?? null,
-        google_description: doc.GoogleDescription ?? null,
-        background_color:   locale === 'en' ? mapBackgroundColor(docs.en.BackgroundColor) : null,
-      }];
-    })
-  );
-  return applyNonLocalised(payloads, ['background_color']);
-}
-
-// ---------------------------------------------------------------------------
-// Main
-// ---------------------------------------------------------------------------
-
 async function main() {
   validateEnv();
 
-  // 1. Read Terms from all three Mongo DBs
+  // 1. Read Terms from all three Mongo DBs with per-locale progress feedback
   console.log('Reading from MongoDB…');
-  const docs = await fetchLocaleDocuments(MONGO_URLS, 'Terms');
+  const docs = {};
   for (const locale of LOCALES) {
-    console.log(`  [${locale}] ✓`);
+    process.stdout.write(`  [${locale}] connecting… `);
+    const result = await fetchLocaleDocuments({ [locale]: MONGO_URLS[locale] }, 'Terms');
+    docs[locale] = result[locale];
+    console.log('✓');
   }
 
   // 2. Preview the text field so the user can verify HTML survives the roundtrip
@@ -98,7 +64,7 @@ async function main() {
 
   // 4. Write to Strapi — default locale (en) first, then fr, then nl
   console.log('Writing to Strapi…');
-  const payloads = buildLocalePayloads(docs);
+  const payloads = buildTermsPayloads(docs);
   for (const locale of LOCALES) {
     process.stdout.write(`  [${locale}] `);
     await putLocale('terms', locale, payloads[locale]);
@@ -109,6 +75,6 @@ async function main() {
 }
 
 main().catch(err => {
-  console.error('\n' + err.message);
+  console.error('\n' + (err.stack ?? err.message));
   process.exit(1);
 });
