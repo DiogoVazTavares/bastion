@@ -1,8 +1,11 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 
+import cloudflare from '@astrojs/cloudflare';
+
 export default defineConfig({
   output: 'static',
+
   vite: {
     css: {
       preprocessorOptions: {
@@ -11,6 +14,7 @@ export default defineConfig({
       },
     },
   },
+
   i18n: {
     defaultLocale: 'en',
     locales: ['en', 'fr', 'nl'],
@@ -18,4 +22,6 @@ export default defineConfig({
       prefixDefaultLocale: true,
     },
   },
+
+  adapter: cloudflare(),
 });
