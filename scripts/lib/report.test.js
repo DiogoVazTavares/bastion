@@ -19,6 +19,20 @@ test('summariseAuditResults counts documents correctly across locales', () => {
   assert.deepEqual(result.byLocale, { en: 2, fr: 1, nl: 0 });
 });
 
+test('summariseAuditResults throws with actionable message when a locale key is missing', () => {
+  assert.throws(
+    () => summariseAuditResults({ en: [], fr: [] }),
+    /expected an array for locale 'nl'/
+  );
+});
+
+test('summariseAuditResults throws with actionable message when a locale value is not an array', () => {
+  assert.throws(
+    () => summariseAuditResults({ en: [], fr: [], nl: null }),
+    /expected an array for locale 'nl'/
+  );
+});
+
 // buildIssueComment
 
 test('buildIssueComment states no migration needed when all locales are empty', () => {

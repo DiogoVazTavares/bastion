@@ -18,10 +18,9 @@
  *   MONGO_URL_EN=... MONGO_URL_FR=... MONGO_URL_NL=... node audit-panelpage.js
  */
 
-import { fetchAllLocaleDocuments } from './lib/mongo.js';
-import { buildIssueComment } from './lib/report.js';
+import { LOCALES, fetchAllLocaleDocuments } from './lib/mongo.js';
+import { buildIssueComment, summariseAuditResults } from './lib/report.js';
 
-const LOCALES = ['en', 'fr', 'nl'];
 const COLLECTION = 'PanelPage';
 const ISSUE_NUMBER = 5;
 const REPO = 'DiogoVazTavares/bastion';
@@ -62,13 +61,20 @@ async function postGitHubComment(comment) {
     const text = await res.text();
     throw new Error(`GitHub API error ${res.status}: ${text}`);
   }
-  const data = await res.json();
-  console.log(`\nComment posted: ${data.html_url}`);
+  try {
+    const data = await res.json();
+    console.log(`\nComment posted: ${data.html_url}`);
+  } catch {
+    console.log('\nComment posted (could not parse response URL).');
+  }
 }
 
 async function closeGitHubIssue() {
   const token = process.env.GH_TOKEN;
-  if (!token) return;
+  if (!token) {
+    console.log(`\nGH_TOKEN not set — skipping close of issue #${ISSUE_NUMBER}.`);
+    return;
+  }
 
   const url = `https://api.github.com/repos/${REPO}/issues/${ISSUE_NUMBER}`;
   const res = await fetch(url, {
@@ -94,8 +100,9 @@ async function main() {
   console.log(`Querying '${COLLECTION}' collection across locale DBs…`);
   const results = await fetchAllLocaleDocuments(MONGO_URLS, COLLECTION, { _id: 0, Title: 1, UID: 1 });
 
+  const { total, byLocale } = summariseAuditResults(results);
   for (const locale of LOCALES) {
-    console.log(`  [${locale}] ${results[locale].length} document(s)`);
+    console.log(`  [${locale}] ${byLocale[locale]} document(s)`);
   }
 
   const comment = buildIssueComment(COLLECTION, results);
@@ -105,7 +112,6 @@ async function main() {
 
   await postGitHubComment(comment);
 
-  const total = LOCALES.reduce((sum, l) => sum + results[l].length, 0);
   if (total === 0) {
     await closeGitHubIssue();
   } else {
@@ -114,6 +120,6 @@ async function main() {
 }
 
 main().catch(err => {
-  console.error('\n' + err.message);
+  console.error('\n' + (err.stack ?? err.message));
   process.exit(1);
 });

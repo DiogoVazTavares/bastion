@@ -1,6 +1,13 @@
-const LOCALES = ['en', 'fr', 'nl'];
+import { LOCALES } from './mongo.js';
 
 export function summariseAuditResults(results) {
+  for (const locale of LOCALES) {
+    if (!Array.isArray(results[locale])) {
+      throw new Error(
+        `summariseAuditResults: expected an array for locale '${locale}', got ${typeof results[locale]}`
+      );
+    }
+  }
   const byLocale = Object.fromEntries(LOCALES.map(l => [l, results[l].length]));
   const total = LOCALES.reduce((sum, l) => sum + byLocale[l], 0);
   return { total, byLocale, isEmpty: total === 0 };
@@ -10,7 +17,8 @@ export function buildIssueComment(collectionName, results) {
   const { total, byLocale, isEmpty } = summariseAuditResults(results);
 
   if (isEmpty) {
-    return `## Audit: \`${collectionName}\`\n\nNo documents found in any locale DB (en: 0, fr: 0, nl: 0).\n\n**Result:** no migration needed — issue can be closed.`;
+    const zeroCounts = LOCALES.map(l => `${l}: ${byLocale[l]}`).join(', ');
+    return `## Audit: \`${collectionName}\`\n\nNo documents found in any locale DB (${zeroCounts}).\n\n**Result:** no migration needed — issue can be closed.`;
   }
 
   const lines = [`## Audit: \`${collectionName}\`\n`, `Found **${total}** document(s) across locale DBs:\n`];

@@ -28,25 +28,34 @@ export async function fetchLocaleDocuments(mongoUrls, collectionName) {
         .collection(collectionName)
         .findOne({}, { projection: { _id: 0 } });
       if (!doc) {
+        let hostHint;
+        try { hostHint = new URL(mongoUrls[locale]).host; } catch { hostHint = '<unparseable URL>'; }
         throw new Error(
-          `No document in '${collectionName}' for locale '${locale}' at ${new URL(mongoUrls[locale]).host}`
+          `No document in '${collectionName}' for locale '${locale}' at ${hostHint}`
         );
       }
       docs[locale] = doc;
     } finally {
-      await client.close();
+      await client.close().catch(() => {});
     }
   }
   return docs;
 }
 
 /**
- * Fetches all documents from `collectionName` in each locale DB.
- * Returns { en, fr, nl } where each value is an array of documents.
+ * Fetches all documents from `collectionName` in each DB specified in mongoUrls.
+ * Returns an object keyed by the same locales as mongoUrls, each value an array.
  */
 export async function fetchAllLocaleDocuments(mongoUrls, collectionName, projection = {}) {
+  const locales = Object.keys(mongoUrls);
+  for (const locale of locales) {
+    if (!mongoUrls[locale]) {
+      throw new Error(`fetchAllLocaleDocuments: missing URL for locale '${locale}'`);
+    }
+  }
+
   const docs = {};
-  for (const locale of LOCALES) {
+  for (const locale of locales) {
     const client = new MongoClient(mongoUrls[locale]);
     try {
       await client.connect();
@@ -56,7 +65,7 @@ export async function fetchAllLocaleDocuments(mongoUrls, collectionName, project
         .find({}, { projection })
         .toArray();
     } finally {
-      await client.close();
+      await client.close().catch(() => {});
     }
   }
   return docs;
