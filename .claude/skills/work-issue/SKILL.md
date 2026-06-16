@@ -35,7 +35,7 @@ graph is the gate that stops building a page before its blocks exist.
 
 ## 3. Branch
 
-Create a working branch: `issue-<N>-<short-slug>` off `main`.
+Create a working branch: `issue-<N>-<short-slug>` off `develop`.
 
 ## 4. Dispatch by section
 
