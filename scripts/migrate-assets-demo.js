@@ -35,6 +35,7 @@ async function main() {
   console.log('Reading Building collection from MongoDB (en)…');
   const docs = await fetchLocaleDocuments({ en: process.env.MONGO_URL_EN }, 'Building');
   const doc = docs.en;
+  console.log(doc);
 
   const image = doc?.Image;
   if (!image) {
@@ -49,7 +50,8 @@ async function main() {
 
   // 3. Resolve — wire real fetchBytes + upload
   const fetchBytes = async (src) => {
-    const res = await fetch(src);
+    console.log(`fetchBytes: ${src}`);
+    const res = await fetch(`${process.env.LEGACY_SERVER_URL}/${src}`);
     if (!res.ok) throw new Error(`fetchBytes: ${res.status} fetching ${src}`);
     return Buffer.from(await res.arrayBuffer());
   };
