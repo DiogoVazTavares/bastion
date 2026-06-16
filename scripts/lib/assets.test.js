@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { resolveAssets, loadManifest, saveManifest } from './assets.js';
+import { resolveAssets, loadManifest, saveManifest, AssetResolutionError } from './assets.js';
 
 // ---------------------------------------------------------------------------
 // resolveAssets
@@ -202,6 +202,82 @@ test('verify optional: omitting verify still reuses manifest hit without error',
   assert.equal(ids.get('cached'), 10);
   assert.equal(stats.reused, 1);
   assert.equal(stats.uploaded, 0);
+});
+
+// ---------------------------------------------------------------------------
+// AssetResolutionError — missing / unreachable Src
+// ---------------------------------------------------------------------------
+
+test('missing Src (null): throws AssetResolutionError with Id and Name', async () => {
+  const fileRefs = [{ Id: 'ref1', Legend: 'Alt', Name: 'photo.jpg', Src: null, MimeType: 'image/jpeg' }];
+
+  await assert.rejects(
+    () => resolveAssets(fileRefs, {}, {
+      fetchBytes: async () => Buffer.from(''),
+      upload: async () => ({ id: 1, url: '' }),
+    }),
+    err => {
+      assert.ok(err instanceof AssetResolutionError, 'must be AssetResolutionError');
+      assert.ok(err.message.includes('ref1'), 'must include Id');
+      assert.ok(err.message.includes('photo.jpg'), 'must include Name');
+      return true;
+    }
+  );
+});
+
+test('empty Src (\'\'): throws AssetResolutionError with Id and Name', async () => {
+  const fileRefs = [{ Id: 'ref2', Legend: 'Alt', Name: 'banner.jpg', Src: '', MimeType: 'image/jpeg' }];
+
+  await assert.rejects(
+    () => resolveAssets(fileRefs, {}, {
+      fetchBytes: async () => Buffer.from(''),
+      upload: async () => ({ id: 1, url: '' }),
+    }),
+    err => {
+      assert.ok(err instanceof AssetResolutionError, 'must be AssetResolutionError');
+      assert.ok(err.message.includes('ref2'), 'must include Id');
+      assert.ok(err.message.includes('banner.jpg'), 'must include Name');
+      return true;
+    }
+  );
+});
+
+test('unreachable Src: fetchBytes throws → re-thrown as AssetResolutionError with Id, Name, Src, original message', async () => {
+  const fileRefs = [{ Id: 'ref3', Legend: 'Alt', Name: 'hero.jpg', Src: 'https://dead.example.com/hero.jpg', MimeType: 'image/jpeg' }];
+
+  await assert.rejects(
+    () => resolveAssets(fileRefs, {}, {
+      fetchBytes: async () => { throw new Error('ECONNREFUSED'); },
+      upload: async () => ({ id: 1, url: '' }),
+    }),
+    err => {
+      assert.ok(err instanceof AssetResolutionError, 'must be AssetResolutionError');
+      assert.ok(err.message.includes('ref3'), 'must include Id');
+      assert.ok(err.message.includes('hero.jpg'), 'must include Name');
+      assert.ok(err.message.includes('https://dead.example.com/hero.jpg'), 'must include Src');
+      assert.ok(err.message.includes('ECONNREFUSED'), 'must include original error message');
+      return true;
+    }
+  );
+});
+
+test('thrown error is instanceof AssetResolutionError, not generic Error', async () => {
+  const fileRefs = [{ Id: 'ref4', Legend: '', Name: 'x.jpg', Src: null, MimeType: 'image/jpeg' }];
+
+  let caught;
+  try {
+    await resolveAssets(fileRefs, {}, {
+      fetchBytes: async () => Buffer.from(''),
+      upload: async () => ({ id: 1, url: '' }),
+    });
+  } catch (err) {
+    caught = err;
+  }
+
+  assert.ok(caught !== undefined, 'must throw');
+  assert.ok(caught instanceof AssetResolutionError, 'instanceof AssetResolutionError');
+  assert.ok(caught instanceof Error, 'also instanceof Error');
+  assert.equal(caught.name, 'AssetResolutionError');
 });
 
 // ---------------------------------------------------------------------------

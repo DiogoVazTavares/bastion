@@ -1,5 +1,12 @@
 import { readFile, writeFile } from 'node:fs/promises';
 
+export class AssetResolutionError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'AssetResolutionError';
+  }
+}
+
 /**
  * Resolves an array of FileRef objects to Strapi media IDs.
  *
@@ -56,7 +63,19 @@ export async function resolveAssets(fileRefs, manifest, { fetchBytes, upload, ve
 
     // new upload
     const uploadPromise = (async () => {
-      const buffer = await fetchBytes(src);
+      if (!src) {
+        throw new AssetResolutionError(
+          `AssetResolutionError: FileRef ${Id} ("${filename}") has no Src — cannot fetch`
+        );
+      }
+      let buffer;
+      try {
+        buffer = await fetchBytes(src);
+      } catch (err) {
+        throw new AssetResolutionError(
+          `AssetResolutionError: FileRef ${Id} ("${filename}") — fetchBytes failed for "${src}": ${err.message}`
+        );
+      }
       const media = await upload(filename, buffer, mimeType, altText);
       return media.id;
     })();
