@@ -1,0 +1,1 @@
+- [Asset resolver](project_asset_resolver.md) — identity key, dedup strategy, manifest path, uploadMedia altText extension (issue #31)
