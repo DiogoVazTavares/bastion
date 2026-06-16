@@ -64,7 +64,7 @@ async function main() {
   const legacyBase = process.env.LEGACY_SERVER_URL;
   const legacySrcs = new Set(
     LOCALES.flatMap(locale => extractAssetUrls(payloads[locale].text ?? ''))
-           .filter(url => url.startsWith(legacyBase))
+           .filter(url => url.startsWith(legacyBase) || url.startsWith('/'))
   );
 
   if (legacySrcs.size > 0) {
@@ -80,8 +80,9 @@ async function main() {
         continue;
       }
       process.stdout.write(`  ${src}… `);
-      const res = await fetch(src);
-      if (!res.ok) throw new Error(`fetch ${src}: ${res.status} ${res.statusText}`);
+      const fetchUrl = src.startsWith('/') ? `${legacyBase}${src}` : src;
+      const res = await fetch(fetchUrl);
+      if (!res.ok) throw new Error(`fetch ${fetchUrl}: ${res.status} ${res.statusText}`);
       const buffer = Buffer.from(await res.arrayBuffer());
       const filename = new URL(src).pathname.split('/').pop() || 'asset';
       const mimeType = res.headers.get('content-type')?.split(';')[0] ?? 'application/octet-stream';
