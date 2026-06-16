@@ -13,7 +13,7 @@
  *   cd scripts && node --env-file=.env migrate-assets-demo.js
  */
 
-import { validateStrapiEnv, uploadMedia } from './lib/strapi.js';
+import { validateStrapiEnv, uploadMedia, verifyMedia } from './lib/strapi.js';
 import { fetchLocaleDocuments } from './lib/mongo.js';
 import { resolveAssets, loadManifest, saveManifest } from './lib/assets.js';
 
@@ -62,6 +62,7 @@ async function main() {
   const { manifest: updatedManifest, stats } = await resolveAssets([image], manifest, {
     fetchBytes,
     upload,
+    verify: (id) => verifyMedia(id),
   });
 
   // 4. Save manifest

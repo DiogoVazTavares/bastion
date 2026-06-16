@@ -121,6 +121,90 @@ test('manifest is updated with newly uploaded ids', async () => {
 });
 
 // ---------------------------------------------------------------------------
+// verify — self-healing manifest
+// ---------------------------------------------------------------------------
+
+test('hit-present: verify returns true → upload never called, stats.reused === 1', async () => {
+  const uploadCalls = [];
+  const verifyCalls = [];
+
+  const fileRefs = [{ Id: 'alive', Legend: 'Alt', Name: 'alive.jpg', Src: 'https://example.com/alive.jpg', MimeType: 'image/jpeg' }];
+  const manifest = { alive: 42 };
+
+  const { ids, stats } = await resolveAssets(fileRefs, manifest, {
+    fetchBytes: async () => Buffer.from(''),
+    upload: async () => { uploadCalls.push(true); return { id: 99, url: '' }; },
+    verify: async (id) => { verifyCalls.push(id); return true; },
+  });
+
+  assert.equal(uploadCalls.length, 0, 'upload must not be called');
+  assert.equal(verifyCalls.length, 1);
+  assert.equal(verifyCalls[0], 42);
+  assert.equal(ids.get('alive'), 42);
+  assert.equal(stats.reused, 1);
+  assert.equal(stats.uploaded, 0);
+});
+
+test('hit-missing (self-heal): verify returns false → upload called, manifest overwritten, stats.uploaded === 1', async () => {
+  const uploadCalls = [];
+
+  const fileRefs = [{ Id: 'dead', Legend: 'Alt', Name: 'dead.jpg', Src: 'https://example.com/dead.jpg', MimeType: 'image/jpeg' }];
+  const manifest = { dead: 42 };
+
+  const { manifest: updatedManifest, ids, stats } = await resolveAssets(fileRefs, manifest, {
+    fetchBytes: async () => Buffer.from('bytes'),
+    upload: async (filename, buffer, mimeType, altText) => {
+      uploadCalls.push({ filename, altText });
+      return { id: 77, url: '' };
+    },
+    verify: async () => false,
+  });
+
+  assert.equal(uploadCalls.length, 1, 'upload must be called exactly once');
+  assert.equal(ids.get('dead'), 77);
+  assert.equal(updatedManifest['dead'], 77, 'manifest entry must be overwritten with new id');
+  assert.equal(stats.uploaded, 1);
+  assert.equal(stats.reused, 0);
+});
+
+test('miss: id not in manifest → upload called, verify never called', async () => {
+  const uploadCalls = [];
+  const verifyCalls = [];
+
+  const fileRefs = [{ Id: 'new', Legend: 'Alt', Name: 'new.jpg', Src: 'https://example.com/new.jpg', MimeType: 'image/jpeg' }];
+
+  const { ids, stats } = await resolveAssets(fileRefs, {}, {
+    fetchBytes: async () => Buffer.from(''),
+    upload: async () => { uploadCalls.push(true); return { id: 5, url: '' }; },
+    verify: async (id) => { verifyCalls.push(id); return true; },
+  });
+
+  assert.equal(uploadCalls.length, 1);
+  assert.equal(verifyCalls.length, 0, 'verify must not be called on a manifest miss');
+  assert.equal(ids.get('new'), 5);
+  assert.equal(stats.uploaded, 1);
+  assert.equal(stats.reused, 0);
+});
+
+test('verify optional: omitting verify still reuses manifest hit without error', async () => {
+  const uploadCalls = [];
+
+  const fileRefs = [{ Id: 'cached', Legend: 'Alt', Name: 'cached.jpg', Src: 'https://example.com/cached.jpg', MimeType: 'image/jpeg' }];
+  const manifest = { cached: 10 };
+
+  const { ids, stats } = await resolveAssets(fileRefs, manifest, {
+    fetchBytes: async () => Buffer.from(''),
+    upload: async () => { uploadCalls.push(true); return { id: 99, url: '' }; },
+    // no verify
+  });
+
+  assert.equal(uploadCalls.length, 0, 'upload must not be called');
+  assert.equal(ids.get('cached'), 10);
+  assert.equal(stats.reused, 1);
+  assert.equal(stats.uploaded, 0);
+});
+
+// ---------------------------------------------------------------------------
 // loadManifest / saveManifest
 // ---------------------------------------------------------------------------
 
