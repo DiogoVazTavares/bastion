@@ -2,6 +2,22 @@
 // <a href> URLs in rich-text fields to R2-backed media URLs.
 
 /**
+ * Extracts all unique src/href values from an HTML string.
+ * Returns a deduplicated array of URL strings in document order.
+ *
+ * @param {string} html
+ * @returns {string[]}
+ */
+export function extractAssetUrls(html) {
+  if (!html) return [];
+  const seen = new Set();
+  for (const [, , url] of html.matchAll(/\b(?:src|href)=(["'])(.*?)\1/g)) {
+    seen.add(url);
+  }
+  return [...seen];
+}
+
+/**
  * Rewrites legacy asset URLs in an HTML string to R2-backed media URLs.
  *
  * @param {string} html - CKE5 rich-text HTML body

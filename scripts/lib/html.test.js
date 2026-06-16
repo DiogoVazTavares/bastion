@@ -1,6 +1,36 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { rewriteAssetUrls } from './html.js';
+import { extractAssetUrls, rewriteAssetUrls } from './html.js';
+
+// ---------------------------------------------------------------------------
+// extractAssetUrls
+// ---------------------------------------------------------------------------
+
+test('extractAssetUrls: returns [] for null', () => {
+  assert.deepEqual(extractAssetUrls(null), []);
+});
+
+test('extractAssetUrls: returns [] for empty string', () => {
+  assert.deepEqual(extractAssetUrls(''), []);
+});
+
+test('extractAssetUrls: extracts img src', () => {
+  assert.deepEqual(extractAssetUrls('<img src="https://cdn/a.jpg">'), ['https://cdn/a.jpg']);
+});
+
+test('extractAssetUrls: extracts a href', () => {
+  assert.deepEqual(extractAssetUrls('<a href="https://cdn/doc.pdf">x</a>'), ['https://cdn/doc.pdf']);
+});
+
+test('extractAssetUrls: deduplicates repeated URLs', () => {
+  const html = '<img src="https://cdn/a.jpg"><a href="https://cdn/a.jpg">link</a>';
+  assert.deepEqual(extractAssetUrls(html), ['https://cdn/a.jpg']);
+});
+
+test('extractAssetUrls: returns multiple distinct URLs in document order', () => {
+  const html = '<img src="https://cdn/a.jpg"><img src="https://cdn/b.jpg">';
+  assert.deepEqual(extractAssetUrls(html), ['https://cdn/a.jpg', 'https://cdn/b.jpg']);
+});
 
 test('img rewrite: replaces legacy src with R2 URL', () => {
   const result = rewriteAssetUrls(

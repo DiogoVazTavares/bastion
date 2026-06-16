@@ -16,12 +16,17 @@
  *   cd scripts && npm install
  *   MONGO_URL_EN=... MONGO_URL_FR=... MONGO_URL_NL=... \
  *   STRAPI_URL=https://... STRAPI_TOKEN=... \
+ *   LEGACY_SERVER_URL=https://www.bastiontower.com \
  *   node migrate-contact.js
  */
 
 import { LOCALES, fetchLocaleDocuments } from './lib/mongo.js';
-import { validateStrapiEnv, putLocale } from './lib/strapi.js';
+import { validateStrapiEnv, putLocale, uploadMedia } from './lib/strapi.js';
 import { buildContactPayloads } from './lib/contact.js';
+import { loadManifest, saveManifest } from './lib/assets.js';
+import { extractAssetUrls, rewriteAssetUrls } from './lib/html.js';
+
+const HTML_MANIFEST_PATH = './.html-asset-manifest.json';
 
 const MONGO_URLS = {
   en: process.env.MONGO_URL_EN,
@@ -31,6 +36,7 @@ const MONGO_URLS = {
 
 function validateEnv() {
   const missing = LOCALES.filter(l => !MONGO_URLS[l]).map(l => `MONGO_URL_${l.toUpperCase()}`);
+  if (!process.env.LEGACY_SERVER_URL) missing.push('LEGACY_SERVER_URL');
   if (missing.length) {
     console.error('Missing required env vars:\n  ' + missing.join('\n  '));
     process.exit(1);
@@ -54,7 +60,47 @@ async function main() {
   // 2. Build payloads
   const payloads = buildContactPayloads(docs);
 
-  // 3. Write to Strapi — default locale (en) first, then fr, then nl
+  // 3. Normalize HTML: upload inline legacy assets and rewrite their URLs
+  const legacyBase = process.env.LEGACY_SERVER_URL;
+  const legacySrcs = new Set(
+    LOCALES.flatMap(locale => extractAssetUrls(payloads[locale].text ?? ''))
+           .filter(url => url.startsWith(legacyBase))
+  );
+
+  if (legacySrcs.size > 0) {
+    console.log(`\nUploading ${legacySrcs.size} inline HTML asset(s)…`);
+    const htmlManifest = await loadManifest(HTML_MANIFEST_PATH);
+    const srcToUrl = {};
+    let uploaded = 0, reused = 0;
+
+    for (const src of legacySrcs) {
+      if (htmlManifest[src] !== undefined) {
+        srcToUrl[src] = htmlManifest[src];
+        reused++;
+        continue;
+      }
+      process.stdout.write(`  ${src}… `);
+      const res = await fetch(src);
+      if (!res.ok) throw new Error(`fetch ${src}: ${res.status} ${res.statusText}`);
+      const buffer = Buffer.from(await res.arrayBuffer());
+      const filename = new URL(src).pathname.split('/').pop() || 'asset';
+      const mimeType = res.headers.get('content-type')?.split(';')[0] ?? 'application/octet-stream';
+      const media = await uploadMedia(filename, buffer, mimeType, '');
+      srcToUrl[src] = media.url;
+      htmlManifest[src] = media.url;
+      uploaded++;
+      console.log('✓');
+    }
+
+    await saveManifest(HTML_MANIFEST_PATH, htmlManifest);
+    console.log(`  Uploaded: ${uploaded}  Reused: ${reused}`);
+
+    for (const locale of LOCALES) {
+      payloads[locale] = { ...payloads[locale], text: rewriteAssetUrls(payloads[locale].text, srcToUrl) };
+    }
+  }
+
+  // 4. Write to Strapi — default locale (en) first, then fr, then nl
   console.log('\nWriting to Strapi…');
   for (const locale of LOCALES) {
     process.stdout.write(`  [${locale}] `);
@@ -62,7 +108,7 @@ async function main() {
     console.log('✓');
   }
 
-  // 4. Per-locale summary
+  // 5. Per-locale summary
   console.log('\nSummary:');
   for (const locale of LOCALES) {
     const { title, text } = payloads[locale];
