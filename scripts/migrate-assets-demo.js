@@ -31,8 +31,9 @@ async function main() {
   validateEnv();
 
   // 1. Fetch building doc from EN Mongo
-  console.log('Reading building collection from MongoDB (en)…');
-  const docs = await fetchLocaleDocuments({ en: process.env.MONGO_URL_EN }, 'building');
+  // Collection name follows the C# class name convention (PascalCase) — verify against your DB if this fails.
+  console.log('Reading Building collection from MongoDB (en)…');
+  const docs = await fetchLocaleDocuments({ en: process.env.MONGO_URL_EN }, 'Building');
   const doc = docs.en;
 
   const image = doc?.Image;
