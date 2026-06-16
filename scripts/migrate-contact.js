@@ -84,7 +84,7 @@ async function main() {
       const res = await fetch(fetchUrl);
       if (!res.ok) throw new Error(`fetch ${fetchUrl}: ${res.status} ${res.statusText}`);
       const buffer = Buffer.from(await res.arrayBuffer());
-      const filename = new URL(src).pathname.split('/').pop() || 'asset';
+      const filename = src.split('/').pop()?.split('?')[0] || 'asset';
       const mimeType = res.headers.get('content-type')?.split(';')[0] ?? 'application/octet-stream';
       const media = await uploadMedia(filename, buffer, mimeType, '');
       srcToUrl[src] = media.url;
