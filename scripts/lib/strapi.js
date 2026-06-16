@@ -108,3 +108,26 @@ export async function uploadMedia(filename, buffer, mimeType, altText) {
   }
   return json[0];
 }
+
+/**
+ * Checks whether a Strapi media file still exists.
+ *
+ * Returns true on 200, false on 404.
+ * Throws on any other status (unexpected server error).
+ *
+ * @param {number} id  - Strapi media library id
+ * @returns {Promise<boolean>}
+ */
+export async function verifyMedia(id) {
+  const url = `${strapiUrl()}/api/upload/files/${id}`;
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: authHeaders(),
+  });
+
+  if (res.status === 200) return true;
+  if (res.status === 404) return false;
+
+  const body = await res.text();
+  throw new Error(`verifyMedia(${id}): unexpected status ${res.status}:\n${body}`);
+}

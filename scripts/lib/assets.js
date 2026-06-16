@@ -8,10 +8,10 @@ import { readFile, writeFile } from 'node:fs/promises';
  *
  * @param {Array<{Id: string, Legend: string, Name: string, Src: string, MimeType?: string}>} fileRefs
  * @param {Record<string, number>} manifest  - keyed by FileRef.Id → Strapi media id
- * @param {{ fetchBytes: (src: string) => Promise<Buffer>, upload: (filename: string, buffer: Buffer, mimeType: string, altText: string) => Promise<{id: number, url: string}> }} fns
+ * @param {{ fetchBytes: (src: string) => Promise<Buffer>, upload: (filename: string, buffer: Buffer, mimeType: string, altText: string) => Promise<{id: number, url: string}>, verify?: (strapiId: number) => Promise<boolean> }} fns
  * @returns {Promise<{ manifest: Record<string, number>, ids: Map<string, number>, stats: { uploaded: number, reused: number } }>}
  */
-export async function resolveAssets(fileRefs, manifest, { fetchBytes, upload }) {
+export async function resolveAssets(fileRefs, manifest, { fetchBytes, upload, verify }) {
   const updatedManifest = { ...manifest };
   const ids = new Map();
   const stats = { uploaded: 0, reused: 0 };
@@ -30,9 +30,20 @@ export async function resolveAssets(fileRefs, manifest, { fetchBytes, upload }) 
 
     if (updatedManifest[Id] !== undefined) {
       // cross-run dedup: already in manifest from a previous run
-      ids.set(Id, updatedManifest[Id]);
-      stats.reused++;
-      continue;
+      const strapiId = updatedManifest[Id];
+      if (verify !== undefined) {
+        const alive = await verify(strapiId);
+        if (alive) {
+          ids.set(Id, strapiId);
+          stats.reused++;
+          continue;
+        }
+        // stale manifest hit — fall through to re-upload below
+      } else {
+        ids.set(Id, strapiId);
+        stats.reused++;
+        continue;
+      }
     }
 
     if (pendingById.has(Id)) {
