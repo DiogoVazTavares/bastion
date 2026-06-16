@@ -75,10 +75,18 @@ async function createLocalization(singleType, locale, data) {
 /**
  * Upload a file buffer to the Strapi media library.
  * Returns the Strapi media object { id, url, ... }.
+ *
+ * @param {string} filename
+ * @param {Buffer} buffer
+ * @param {string} mimeType
+ * @param {string} [altText]  - sets alternativeText in Strapi media library
  */
-export async function uploadMedia(filename, buffer, mimeType) {
+export async function uploadMedia(filename, buffer, mimeType, altText) {
   const form = new FormData();
   form.append('files', new Blob([buffer], { type: mimeType }), filename);
+  if (altText !== undefined) {
+    form.append('fileInfo', JSON.stringify({ alternativeText: altText, name: filename }));
+  }
 
   const url = `${strapiUrl()}/api/upload`;
   const res = await fetch(url, {
