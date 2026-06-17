@@ -29,15 +29,26 @@ export function validateStrapiEnv() {
 }
 
 /**
- * PUT data for a locale on a Strapi single-type.
+ * PUT data for a locale on a Strapi single-type, writing to both draft and published.
+ *
+ * Strapi v5 draftAndPublish: a PUT without ?status= writes only the draft; the
+ * published copy retains whatever components were last explicitly published.  When the
+ * building page has localized repeatable components (building-item) inside a dynamic
+ * zone, writing fr/nl drafts and then calling a separate publish step causes Strapi to
+ * regenerate the published component rows for the last-written locale only, silently
+ * dropping item links for earlier locales.
+ *
+ * Fix: pass ?status=published so Strapi writes both the draft and the published version
+ * in a single call — the returned entry carries a non-null publishedAt.
+ *
  * For the default locale (en): omits ?locale= so Strapi v5 treats it as an upsert.
- * Passing ?locale=en on a brand-new single-type triggers update semantics and returns 405.
- * Falls back to POST /localizations when a non-default locale variant does not exist yet.
+ * Falls back to POST /localizations when a non-default locale variant does not exist yet,
+ * then immediately publishes with a second PUT ?status=published.
  */
 export async function putLocale(singleType, locale, data) {
   const url = locale === 'en'
-    ? `${strapiUrl()}/api/${singleType}`
-    : `${strapiUrl()}/api/${singleType}?locale=${locale}`;
+    ? `${strapiUrl()}/api/${singleType}?status=published`
+    : `${strapiUrl()}/api/${singleType}?locale=${locale}&status=published`;
 
   const res = await fetch(url, {
     method: 'PUT',
@@ -47,32 +58,53 @@ export async function putLocale(singleType, locale, data) {
 
   if (!res.ok) {
     if (res.status === 404) {
-      return createLocalization(singleType, locale, data);
+      return createLocalizationAndPublish(singleType, locale, data);
     }
     const body = await res.text();
     throw new Error(
-      `Strapi PUT /${singleType}${locale !== 'en' ? `?locale=${locale}` : ''} failed (${res.status}):\n${body}`
+      `Strapi PUT /${singleType}?status=published${locale !== 'en' ? `&locale=${locale}` : ''} failed (${res.status}):\n${body}`
     );
   }
 
   return res.json();
 }
 
-async function createLocalization(singleType, locale, data) {
-  const url = `${strapiUrl()}/api/${singleType}/localizations`;
-  const res = await fetch(url, {
+/**
+ * Creates a new locale variant via POST /localizations (draft), then immediately
+ * publishes it via PUT ?status=published.  Used as the 404 fallback from putLocale
+ * for locales that have never been written before.
+ */
+async function createLocalizationAndPublish(singleType, locale, data) {
+  const createUrl = `${strapiUrl()}/api/${singleType}/localizations`;
+  const createRes = await fetch(createUrl, {
     method: 'POST',
     headers: authHeaders(),
     body: JSON.stringify({ ...data, locale }),
   });
 
-  if (!res.ok) {
-    const body = await res.text();
+  if (!createRes.ok) {
+    const body = await createRes.text();
     throw new Error(
-      `Strapi POST /${singleType}/localizations for ${locale} failed (${res.status}):\n${body}`
+      `Strapi POST /${singleType}/localizations for ${locale} failed (${createRes.status}):\n${body}`
     );
   }
-  return res.json();
+
+  // Draft created — now publish it so the published copy has the correct components.
+  const publishUrl = `${strapiUrl()}/api/${singleType}?locale=${locale}&status=published`;
+  const publishRes = await fetch(publishUrl, {
+    method: 'PUT',
+    headers: authHeaders(),
+    body: JSON.stringify({ data }),
+  });
+
+  if (!publishRes.ok) {
+    const body = await publishRes.text();
+    throw new Error(
+      `Strapi PUT /${singleType}?locale=${locale}&status=published (post-create publish) failed (${publishRes.status}):\n${body}`
+    );
+  }
+
+  return publishRes.json();
 }
 
 /**

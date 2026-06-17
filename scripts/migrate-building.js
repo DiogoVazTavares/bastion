@@ -124,7 +124,8 @@ async function fetchPanels(db, doc) {
       continue;
     }
     if (collName === 'PanelBuilding') {
-      const itemRefs = panel._DBRef?.c ?? [];
+      // Items are [Leaf]-tagged in C# → stored in _DBRef.l (leaf list), not _DBRef.c (child sub-blocks)
+      const itemRefs = panel._DBRef?.l ?? [];
       const items = [];
       for (const ir of itemRefs) {
         const item = await db.collection(refColl(ir)).findOne({ _id: toObjectId(refId(ir)) });

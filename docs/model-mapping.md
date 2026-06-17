@@ -25,7 +25,24 @@ across locale variants).
    (`#153d86`) is navy blue — the class was always misnamed. Strapi enum uses `"Blue"` to match
    what editors see. The CSS class `section--bg-green` is kept for now and mapped at runtime;
    tracked for rename in `docs/site-wide-issues.md` (SW-4).
-5. _(add: nesting-depth limits, type coercions, naming changes, CKE5/HTML handling, …)_
+5. **`blocks` dynamic zones must be explicitly `localized: true` on all multi-block page single-types.**
+   Strapi v5 i18n treats a dynamic zone as non-localized unless explicitly opted in. Without the
+   annotation, `syncNonLocalizedAttributes` propagates the source locale's entire `blocks` payload
+   (including component rows) to all other locale variants after each PUT, wiping previously-written
+   locales' items. Fix: add `"pluginOptions": { "i18n": { "localized": true } }` to the `blocks`
+   attribute on every multi-block page schema. Applied to `building` (2026-06-17). Must also be
+   applied when Accommodation, Services, Location, and Home schemas are created.
+   Tracked in `docs/decisions.md` (2026-06-17).
+   _(Former deviation #5 — `building-item` image fields `localized:true` — was a workaround for a
+   symptom of this root cause; reverted below once the DZ was fixed.)_
+6. **`building-item` image fields reverted to `localized: false` (correction of former deviation #5).**
+   C# `PanelBuilding.Item.BigImage` and `SmallImage` carry `[Picture(Localized = false)]` — correctly
+   shared across locales. A prior workaround set them to `localized: true` to prevent an observed
+   ID-collision cascade, but the real root cause was the `blocks` DZ missing `localized: true`
+   (deviation #5 above). With the DZ now localized, `syncNonLocalizedAttributes` no longer touches
+   `blocks` at all, so the ID-collision path is gone. Both fields revert to `localized: false` as
+   the C# model specifies. Tracked in `docs/decisions.md` (2026-06-17).
+7. _(add: nesting-depth limits, type coercions, naming changes, CKE5/HTML handling, …)_
 
 ---
 
@@ -43,7 +60,7 @@ Hero + meta fields on the type; `blocks` dynamic zone.
 | `google_description` | `GoogleDescription` | text (multiline) | L | `[Text(Multiline = true, Localized = true)]` |
 | `footer_title` | _(none)_ | string | L | **Forced deviation** — absent from `Building.cs`; no C# origin. Included for operational consistency: all multi-block page single-types expose `footer_title` so editors have a uniform experience. Source of truth: issue #12. |
 | `slug` | | uid/text | L | translated per locale; drives routing — issue #24 |
-| `blocks` | | dynamic zone | — | allows: `blocks.paragraph`, `blocks.paragraph-image`, `blocks.building`, `blocks.partners` |
+| `blocks` | | dynamic zone | L | allows: `blocks.paragraph`, `blocks.paragraph-image`, `blocks.building`, `blocks.partners`; forced deviation #5 (must be explicitly localized) |
 
 _(repeat a block like this for: Accommodation, Services, Location, Home)_
 
@@ -120,8 +137,8 @@ Full-width banner: title, cover text, image, optional video. _(field table TBD)_
 
 | Strapi field | C# property | Type | Localised | Notes |
 |---|---|---|---|---|
-| `big_image` | `BigImage` | media (single) | N | `[Picture(Legend = "Big Image", Localized = false)]`; uploaded to media library |
-| `small_image` | `SmallImage` | media (single) | N | `[Picture(Legend = "Small Image", Localized = false)]`; uploaded to media library |
+| `big_image` | `BigImage` | media (single) | N | `[Picture(Legend = "Big Image", Localized = false)]`; reverted to N — former workaround (deviation #5 was misdiagnosed; real fix is DZ `localized:true`, deviation #5) |
+| `small_image` | `SmallImage` | media (single) | N | `[Picture(Legend = "Small Image", Localized = false)]`; reverted to N — same as above |
 | `title` | `Title` | string | L | `[Text(Legend = "Title", Localized = true)]` |
 | `text` | `Text` | CKEditor5 (`bastion` preset) | L | `[HTML(Legend = "Texte", Localized = true)]` |
 
