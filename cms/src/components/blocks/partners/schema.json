@@ -58,7 +58,7 @@
     },
     "background_color": {
       "type": "enumeration",
-      "enum": ["White", "Lightgray", "Gray", "Green"],
+      "enum": ["White", "Lightgray", "Gray", "Blue"],
       "default": "White",
       "pluginOptions": {
         "i18n": {

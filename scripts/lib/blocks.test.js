@@ -195,7 +195,7 @@ test('mapBuilding missing Show and ShowTitle default to true', () => {
 
 test('mapBuilding BackgroundColor integer maps correctly', () => {
   assert.equal(mapBuilding({ Items: [], BackgroundColor: 0 }, []).background_color, 'White');
-  assert.equal(mapBuilding({ Items: [], BackgroundColor: 3 }, []).background_color, 'Green');
+  assert.equal(mapBuilding({ Items: [], BackgroundColor: 3 }, []).background_color, 'Blue');
 });
 
 // mapPartners
@@ -235,5 +235,5 @@ test('mapPartners missing Show and ShowTitle default to true', () => {
 
 test('mapPartners BackgroundColor integer maps correctly', () => {
   assert.equal(mapPartners({ BackgroundColor: 2 }, []).background_color, 'Gray');
-  assert.equal(mapPartners({ BackgroundColor: 3 }, []).background_color, 'Green');
+  assert.equal(mapPartners({ BackgroundColor: 3 }, []).background_color, 'Blue');
 });

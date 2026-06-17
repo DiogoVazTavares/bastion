@@ -18,6 +18,7 @@
     "lint": "biome lint .",
     "format": "biome format --write .",
     "check": "biome check --write .",
+    "pretypecheck": "strapi ts:generate-types",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p src/admin/tsconfig.json",
     "types:generate": "strapi ts:generate-types"
   },
