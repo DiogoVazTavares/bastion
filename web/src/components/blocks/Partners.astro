@@ -1,0 +1,46 @@
+---
+interface Props {
+  title: string | null;
+  text: string | null;
+  images: Array<{ url: string; alternativeText: string | null }>;
+  show: boolean;
+  show_title: boolean;
+  background_color: 'White' | 'Lightgray' | 'Gray' | 'Green';
+}
+
+const { title, text, images, show, show_title, background_color } = Astro.props;
+
+const bgClass: Record<string, string> = {
+  Lightgray: 'section--bg-light-gray',
+  Gray: 'section--bg-gray',
+  Green: 'section--bg-green',
+};
+
+const sectionClass = ['section', bgClass[background_color]].filter(Boolean).join(' ');
+---
+
+{show && (
+  <div class={sectionClass}>
+    <div class="section__inner">
+      {show_title && title && <h4 class="section__title">{title}</h4>}
+      {text && <Fragment set:html={text} />}
+      <div class="partners" data-behavior="slider" data-slider-delay="4000">
+        <div class="partners__inner">
+          <div class="partners__slides" data-behavior="slider-slides">
+            {images.map((image) => (
+              <figure class="partners__figure" data-behavior="slider-slide">
+                <img
+                  class="partners__image"
+                  srcset={`${image.url}?w=450 450w, ${image.url}?w=600 600w, ${image.url}?w=900 900w, ${image.url}?w=1200 1200w, ${image.url}?w=1500 1500w, ${image.url}?w=2000 2000w`}
+                  sizes="(max-width: 768px) calc(100vw / 2 - 40px), calc(100vw / 4 - 100px)"
+                  src={image.url}
+                  alt={image.alternativeText ?? ''}
+                />
+              </figure>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+)}

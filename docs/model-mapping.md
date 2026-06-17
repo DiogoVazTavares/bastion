@@ -57,7 +57,19 @@ every page — **not a standalone page**. No hero, no SEO meta, no show/backgrou
 a layout section, not a page; SEO meta fields are not applicable.
 
 ### Terms / Credits (flat — no dynamic zone)
-_(fill in)_
+
+Both `terms` and `credits` are Strapi single-types with identical field shapes. `Credits` extends `PanelText` in C# (via inheritance); fields are flattened per forced deviation #1.
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `title` | `Title` | string | L | inherited from `PanelText` |
+| `text` | `Text` | CKEditor5 (`bastion` preset) | L | inherited from `PanelText` |
+| `show` | `Show` | boolean (default true) | L | inherited from `PanelText` |
+| `show_title` | `ShowTitle` | boolean (default true) | L | inherited from `PanelText` |
+| `background_color` | `BackgroundColor` | enumeration (White/Lightgray/Gray/Green, default White) | N | inherited from `PanelText`; forced deviation #1 |
+| `footer_title` | `FooterTitle` | string | L | `[Text(Legend = "Footer title", Localized = true)]` |
+| `browser_title` | `BrowserTitle` | string | L | `[Text(Legend = "Titre du navigateur", Localized = true)]` |
+| `google_description` | `GoogleDescription` | text (multiline) | L | `[Text(Multiline = true, Localized = true)]` |
 
 ---
 
@@ -91,10 +103,33 @@ Full-width banner: title, cover text, image, optional video. _(field table TBD)_
 | `background_color` | `BackgroundColor` | enumeration (White/Lightgray/Gray/Green, default White) | N | `[Enumeration(Localized = false)]`; forced deviation #1 |
 
 ### blocks.building ← `PanelBuilding`
-Ordered items: big image, small image, title, HTML text. _(field table TBD)_
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `show` | `Show` | boolean (default true) | L | `[Switch(Legend = "Show on website", Localized = true)]`; forced deviation #1 |
+| `show_title` | `ShowTitle` | boolean (default true) | L | `[Switch(Legend = "Show Title", Localized = true)]`; forced deviation #1 |
+| `background_color` | `BackgroundColor` | enumeration (White/Lightgray/Gray/Green, default White) | N | `[Enumeration(Localized = false)]`; forced deviation #1 |
+| `items` | (children via `Model.Fluent.Leaves<IBuildingItemBlock>()`) | repeatable component (`blocks.building-item`) | L (wrapper localised) | items array |
+
+#### blocks.building-item ← `PanelBuilding.Item`
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `big_image` | `BigImage` | media (single) | N | `[Picture(Legend = "Big Image", Localized = false)]`; uploaded to media library |
+| `small_image` | `SmallImage` | media (single) | N | `[Picture(Legend = "Small Image", Localized = false)]`; uploaded to media library |
+| `title` | `Title` | string | L | `[Text(Legend = "Title", Localized = true)]` |
+| `text` | `Text` | CKEditor5 (`bastion` preset) | L | `[HTML(Legend = "Texte", Localized = true)]` |
 
 ### blocks.partners ← `PanelPartners`
-Title + HTML text + image array. _(field table TBD)_
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `title` | `Title` | string | L | `[Text(Legend = "Titre", Localized = true)]` |
+| `text` | `Text` | CKEditor5 (`bastion` preset) | L | `[HTML(Legend = "Texte", Localized = true)]` |
+| `images` | `Images` | media (multiple) | N | `[Pictures(Legend = "Images", Localized = false)]`; all uploaded to media library |
+| `show` | `Show` | boolean (default true) | L | `[Switch(Legend = "Show on website", Localized = true)]`; forced deviation #1 |
+| `show_title` | `ShowTitle` | boolean (default true) | L | `[Switch(Legend = "Show Title", Localized = true)]`; forced deviation #1 |
+| `background_color` | `BackgroundColor` | enumeration (White/Lightgray/Gray/Green, default White) | N | `[Enumeration(Localized = false)]`; forced deviation #1 |
 
 ### blocks.slider ← `PanelSlider`
 Title + `slider-slide[]` (kind enum, deviation #2). _(field table TBD)_

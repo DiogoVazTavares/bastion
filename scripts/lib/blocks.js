@@ -28,6 +28,32 @@ export function mapParagraphImage(doc, imageId) {
   };
 }
 
+export function mapBuilding(doc, itemImageIds) {
+  const items = (doc.Items ?? []).map((item, i) => ({
+    big_image:   itemImageIds?.[i]?.bigImageId   ?? null,
+    small_image: itemImageIds?.[i]?.smallImageId ?? null,
+    title:       item.Title ?? null,
+    text:        item.Text  ?? null,
+  }));
+  return {
+    show:             doc.Show      ?? true,
+    show_title:       doc.ShowTitle ?? true,
+    background_color: mapBackgroundColor(doc.BackgroundColor),
+    items,
+  };
+}
+
+export function mapPartners(doc, imageIds) {
+  return {
+    title:            doc.Title     ?? null,
+    text:             doc.Text      ?? null,
+    images:           imageIds      ?? [],
+    show:             doc.Show      ?? true,
+    show_title:       doc.ShowTitle ?? true,
+    background_color: mapBackgroundColor(doc.BackgroundColor),
+  };
+}
+
 /**
  * Returns new payloads with non-localised fields copied from the 'en' payload to all locales.
  * Does not mutate the input.
