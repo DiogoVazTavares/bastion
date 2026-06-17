@@ -40,8 +40,8 @@ for (const item of items) {
 
 {
   show && (
-    <div class={sectionClass}>
-      <div class="section__inner">
+    <div class={sectionClass} data-spy-enter-viewport>
+      <div class="section__inner section__inner--building">
         {items.map((item, i) => (
           <div class={`building building--section ${itemModifiers[i]}`}>
             <div class="building__inner">

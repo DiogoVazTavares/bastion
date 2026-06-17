@@ -22,7 +22,7 @@ const sectionClass = ["section", bgClass[background_color]]
 
 {
   show && (
-    <div class={sectionClass}>
+    <div class={sectionClass} data-spy-enter-viewport>
       <div class="section__inner">
         {show_title && title && <h4 class="section__title">{title}</h4>}
         <div class="paragraph">
