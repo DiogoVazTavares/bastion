@@ -1,6 +1,20 @@
 import mongodb from 'mongodb';
 const { MongoClient } = mongodb;
 
+/**
+ * Opens a MongoDB connection, calls callback(db), closes the connection.
+ * Use when you need to make multiple queries across collections.
+ */
+export async function withDatabase(mongoUrl, callback) {
+  const client = new MongoClient(mongoUrl);
+  try {
+    await client.connect();
+    return await callback(client.db());
+  } finally {
+    await client.close().catch(() => {});
+  }
+}
+
 export const LOCALES = ['en', 'fr', 'nl'];
 
 /**

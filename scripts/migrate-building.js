@@ -24,7 +24,9 @@
  *   node --env-file=.env migrate-building.js
  */
 
-import { LOCALES, fetchLocaleDocuments } from './lib/mongo.js';
+import mongodb from 'mongodb';
+const { ObjectId } = mongodb;
+import { LOCALES, withDatabase } from './lib/mongo.js';
 import { validateStrapiEnv, putLocale, uploadMedia, verifyMedia } from './lib/strapi.js';
 import { resolveAssets, loadManifest, saveManifest } from './lib/assets.js';
 import {
@@ -73,7 +75,7 @@ function makeUpload() {
 }
 
 // ---------------------------------------------------------------------------
-// Panel type discriminator — C# class name stored in _t field
+// Panel type discriminator — MongoDB collection name = C# class name
 // ---------------------------------------------------------------------------
 const PANEL_TYPES = {
   PanelText: 'blocks.paragraph',
@@ -82,15 +84,39 @@ const PANEL_TYPES = {
   PanelPartners: 'blocks.partners',
 };
 
+function toObjectId(val) {
+  if (val instanceof ObjectId) return val;
+  if (typeof val === 'string') return new ObjectId(val);
+  return val;
+}
+
 /**
- * Detect the panels array field name from the doc.
- * The legacy C# driver serialises children as _children, Panels, or Children.
+ * Resolve _DBRef.c references to full documents.
+ * For PanelBuilding, also fetches its items from PanelBuilding-Item.
  */
-function getPanels(doc) {
-  for (const key of ['_children', 'Panels', 'Children', 'panels', 'children']) {
-    if (Array.isArray(doc[key])) return doc[key];
+async function fetchPanels(db, doc) {
+  const refs = doc._DBRef?.c ?? [];
+  const panels = [];
+  for (const ref of refs) {
+    const collName = ref.$ref;
+    const panel = await db.collection(collName).findOne({ _id: toObjectId(ref.$id) });
+    if (!panel) {
+      console.warn(`  WARNING: ${collName}/${ref.$id} not found — skipped`);
+      continue;
+    }
+    if (collName === 'PanelBuilding') {
+      const itemRefs = panel._DBRef?.c ?? [];
+      const items = [];
+      for (const ir of itemRefs) {
+        const item = await db.collection(ir.$ref).findOne({ _id: toObjectId(ir.$id) });
+        if (item) items.push(item);
+      }
+      panels.push({ ...panel, _t: collName, Items: items });
+    } else {
+      panels.push({ ...panel, _t: collName });
+    }
   }
-  return [];
+  return panels;
 }
 
 // ---------------------------------------------------------------------------
@@ -171,23 +197,19 @@ async function mapPanel(panel, manifest, fetchBytes, upload) {
 async function main() {
   validateEnv();
 
-  // 1. Read Building documents from all three Mongo DBs
+  // 1. Read Building documents + panels from all three Mongo DBs
   console.log('Reading from MongoDB…');
   const docs = {};
+  const panelsByLocale = {};
   for (const locale of LOCALES) {
     process.stdout.write(`  [${locale}] connecting… `);
-    const result = await fetchLocaleDocuments({ [locale]: MONGO_URLS[locale] }, 'Building');
-    docs[locale] = result[locale];
-    console.log('✓');
-  }
-
-  // Debug: print top-level keys of en doc to confirm structure
-  console.log('\nBuilding doc keys (en):', Object.keys(docs.en));
-  const panelArray = getPanels(docs.en);
-  console.log(`Panel array length (en): ${panelArray.length}`);
-  if (panelArray.length > 0) {
-    const types = [...new Set(panelArray.map(p => p._t ?? '(no _t)'))];
-    console.log('Panel _t values (en):', types);
+    await withDatabase(MONGO_URLS[locale], async (db) => {
+      const doc = await db.collection('Building').findOne({}, { projection: { _id: 0 } });
+      if (!doc) throw new Error(`No Building document for locale '${locale}'`);
+      docs[locale] = doc;
+      panelsByLocale[locale] = await fetchPanels(db, doc);
+    });
+    console.log(`✓ (${panelsByLocale[locale].length} panels)`);
   }
 
   // 2. Load shared asset manifest (keyed by FileRef.Id)
@@ -204,7 +226,7 @@ async function main() {
 
   for (const locale of LOCALES) {
     const doc = docs[locale];
-    const panels = getPanels(doc);
+    const panels = panelsByLocale[locale];
 
     // Hero image (non-localised — only upload once, from en; others get same id below)
     let heroImageId = null;
