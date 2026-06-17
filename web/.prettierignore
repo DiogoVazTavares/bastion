@@ -1,0 +1,4 @@
+dist/
+.astro/
+# Compiled CSS artifacts alongside Less sources — not imported by the build
+src/styles/*.css

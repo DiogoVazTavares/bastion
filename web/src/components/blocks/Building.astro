@@ -2,7 +2,7 @@
 interface Props {
   show: boolean;
   show_title: boolean;
-  background_color: 'White' | 'Lightgray' | 'Gray' | 'Blue';
+  background_color: "White" | "Lightgray" | "Gray" | "Blue";
   items: Array<{
     big_image: { url: string; alternativeText: string | null } | null;
     small_image: { url: string; alternativeText: string | null } | null;
@@ -14,12 +14,14 @@ interface Props {
 const { show, background_color, items } = Astro.props;
 
 const bgClass: Record<string, string> = {
-  Lightgray: 'section--bg-light-gray',
-  Gray: 'section--bg-gray',
-  Blue: 'section--bg-green',
+  Lightgray: "section--bg-light-gray",
+  Gray: "section--bg-gray",
+  Blue: "section--bg-green",
 };
 
-const sectionClass = ['section', bgClass[background_color]].filter(Boolean).join(' ');
+const sectionClass = ["section", bgClass[background_color]]
+  .filter(Boolean)
+  .join(" ");
 
 // Replicate C# Context.Items["textimagecount"] logic:
 // - counter starts at 0
@@ -28,51 +30,53 @@ const sectionClass = ['section', bgClass[background_color]].filter(Boolean).join
 let textimagecount = 0;
 const itemModifiers: string[] = [];
 for (const item of items) {
-  const odd = (textimagecount % 2) === 0;
-  itemModifiers.push(odd ? 'building--right' : 'building--left');
+  const odd = textimagecount % 2 === 0;
+  itemModifiers.push(odd ? "building--right" : "building--left");
   if (item.small_image !== null) {
     textimagecount += 1;
   }
 }
 ---
 
-{show && (
-  <div class={sectionClass}>
-    <div class="section__inner">
-      {items.map((item, i) => (
-        <div class={`building building--section ${itemModifiers[i]}`}>
-          <div class="building__inner">
-            {item.big_image && (
-              <figure class="building__big-figure" data-spy-enter-viewport>
-                <img
-                  class="building__big-image"
-                  srcset={`${item.big_image.url}?w=450 450w, ${item.big_image.url}?w=600 600w, ${item.big_image.url}?w=900 900w, ${item.big_image.url}?w=1200 1200w, ${item.big_image.url}?w=1500 1500w, ${item.big_image.url}?w=2000 2000w`}
-                  sizes="100vw"
-                  src={item.big_image.url}
-                  alt={item.big_image.alternativeText ?? ''}
-                />
-              </figure>
-            )}
-            <div class="building__text-image" data-spy-enter-viewport>
-              {item.small_image && (
-                <figure class="building__small-figure">
+{
+  show && (
+    <div class={sectionClass}>
+      <div class="section__inner">
+        {items.map((item, i) => (
+          <div class={`building building--section ${itemModifiers[i]}`}>
+            <div class="building__inner">
+              {item.big_image && (
+                <figure class="building__big-figure" data-spy-enter-viewport>
                   <img
-                    class="building__small-image"
-                    srcset={`${item.small_image.url}?w=450 450w, ${item.small_image.url}?w=600 600w, ${item.small_image.url}?w=900 900w, ${item.small_image.url}?w=1200 1200w, ${item.small_image.url}?w=1500 1500w, ${item.small_image.url}?w=2000 2000w`}
-                    sizes="(max-width: 768px) 100vw, 50vw"
-                    src={item.small_image.url}
-                    alt={item.small_image.alternativeText ?? ''}
+                    class="building__big-image"
+                    srcset={`${item.big_image.url}?w=450 450w, ${item.big_image.url}?w=600 600w, ${item.big_image.url}?w=900 900w, ${item.big_image.url}?w=1200 1200w, ${item.big_image.url}?w=1500 1500w, ${item.big_image.url}?w=2000 2000w`}
+                    sizes="100vw"
+                    src={item.big_image.url}
+                    alt={item.big_image.alternativeText ?? ""}
                   />
                 </figure>
               )}
-              <div class="building__text">
-                <h5 class="building__text-title">{item.title}</h5>
-                <Fragment set:html={item.text ?? ''} />
+              <div class="building__text-image" data-spy-enter-viewport>
+                {item.small_image && (
+                  <figure class="building__small-figure">
+                    <img
+                      class="building__small-image"
+                      srcset={`${item.small_image.url}?w=450 450w, ${item.small_image.url}?w=600 600w, ${item.small_image.url}?w=900 900w, ${item.small_image.url}?w=1200 1200w, ${item.small_image.url}?w=1500 1500w, ${item.small_image.url}?w=2000 2000w`}
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      src={item.small_image.url}
+                      alt={item.small_image.alternativeText ?? ""}
+                    />
+                  </figure>
+                )}
+                <div class="building__text">
+                  <h5 class="building__text-title">{item.title}</h5>
+                  <Fragment set:html={item.text ?? ""} />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
-  </div>
-)}
+  )
+}

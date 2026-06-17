@@ -1,44 +1,44 @@
 /* Component our-lightbox */
 
 .our-lightbox-base() {
-    .our-lightbox {
-        overflow: hidden;
-        height: 100%;
+  .our-lightbox {
+    overflow: hidden;
+    height: 100%;
 
-        &__container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity linear 0.5s;
+    &__container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity linear 0.5s;
 
-            .our-lightbox--shown & {
-                transition: opacity linear 0.5s 0.5s;
-                opacity: 1;
-            }
-        }
-
-        &__bg {
-            overflow: hidden;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 999;
-            background: white;
-            opacity: 0;
-            transition: opacity linear 0.5s 0.5s;
-
-            .our-lightbox--shown & {
-                transition: opacity linear 0.5s;
-                opacity: 1;
-            }
-        }
+      .our-lightbox--shown & {
+        transition: opacity linear 0.5s 0.5s;
+        opacity: 1;
+      }
     }
+
+    &__bg {
+      overflow: hidden;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 999;
+      background: white;
+      opacity: 0;
+      transition: opacity linear 0.5s 0.5s;
+
+      .our-lightbox--shown & {
+        transition: opacity linear 0.5s;
+        opacity: 1;
+      }
+    }
+  }
 }
 
 .our-lightbox-mobile() {
@@ -67,4 +67,3 @@
 
 .our-lightbox-between-laptop-desktop() {
 }
-

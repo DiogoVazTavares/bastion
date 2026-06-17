@@ -1,16 +1,16 @@
 ---
-import type { GetStaticPaths, InferGetStaticPropsType } from 'astro';
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import { fetchCredits } from '../../lib/strapi';
+import type { GetStaticPaths, InferGetStaticPropsType } from "astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { fetchCredits } from "../../lib/strapi";
 
 export const getStaticPaths = (async () => {
-  const locales = ['en', 'fr', 'nl'];
+  const locales = ["en", "fr", "nl"];
 
   const pages = await Promise.all(
     locales.map(async (locale) => {
       const credits = await fetchCredits(locale);
       return { params: { locale }, props: { credits, locale } };
-    })
+    }),
   );
 
   return pages;
@@ -30,18 +30,20 @@ const { credits, locale } = Astro.props;
   locale={locale}
   greenMenu={true}
 >
-  {credits.show && (
-    <div class="section">
-      <article class="section__inner section__inner--terms">
-        {credits.show_title && credits.title && (
-          <h4 class="section__title">{credits.title}</h4>
-        )}
-        <div class="paragraph">
-          <div class="paragraph__content">
-            <Fragment set:html={credits.text ?? ''} />
+  {
+    credits.show && (
+      <div class="section">
+        <article class="section__inner section__inner--terms">
+          {credits.show_title && credits.title && (
+            <h4 class="section__title">{credits.title}</h4>
+          )}
+          <div class="paragraph">
+            <div class="paragraph__content">
+              <Fragment set:html={credits.text ?? ""} />
+            </div>
           </div>
-        </div>
-      </article>
-    </div>
-  )}
+        </article>
+      </div>
+    )
+  }
 </BaseLayout>
