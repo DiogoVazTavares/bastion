@@ -6,9 +6,10 @@ interface Props {
   show: boolean;
   show_title: boolean;
   background_color: "White" | "Lightgray" | "Gray" | "Blue";
+  direction: "left" | "right";
 }
 
-const { title, text, image, show, show_title, background_color } = Astro.props;
+const { title, text, image, show, show_title, background_color, direction } = Astro.props;
 
 const bgClass: Record<string, string> = {
   Lightgray: "section--bg-light-gray",
@@ -26,8 +27,8 @@ const sectionClass = ["section", bgClass[background_color]]
     <div class={sectionClass} data-spy-enter-viewport>
       <div class="section__inner">
         {show_title && title && <h4 class="section__title">{title}</h4>}
-        <div class="paragraph-image">
-          <div class="paragraph-image__inner paragraph-image--right">
+        <div class={`paragraph-image paragraph-image--${direction}`}>
+          <div class="paragraph-image__inner">
             <div class="paragraph-image__container">
               <div class="paragraph-image__text">
                 <Fragment set:html={text ?? ""} />

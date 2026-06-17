@@ -24,6 +24,23 @@ export const getStaticPaths = (async () => {
 type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
 const { building, locale } = Astro.props;
+
+// Compute paragraph-image directions via cross-block textimagecount (mirrors _Section.cshtml logic)
+let textimagecount = 0;
+const blockDirections = building.blocks.map((block: any) => {
+  if (block.__component === "blocks.building") {
+    block.items?.forEach((item: any) => {
+      if (item.small_image) textimagecount++;
+    });
+    return null;
+  }
+  if (block.__component === "blocks.paragraph-image") {
+    const direction = textimagecount % 2 === 0 ? "right" : "left";
+    textimagecount++;
+    return direction;
+  }
+  return null;
+});
 ---
 
 <BaseLayout
@@ -35,12 +52,12 @@ const { building, locale } = Astro.props;
   <Hero title={building.hero} image={building.image} video={null} />
   <div id="content" tabindex="-1"></div>
   {
-    building.blocks.map((block) => {
+    building.blocks.map((block: any, i: number) => {
       if (block.__component === "blocks.paragraph") {
         return <Paragraph {...block} />;
       }
       if (block.__component === "blocks.paragraph-image") {
-        return <ParagraphImage {...block} />;
+        return <ParagraphImage {...block} direction={blockDirections[i] as "left" | "right"} />;
       }
       if (block.__component === "blocks.building") {
         return <BuildingBlock {...block} />;
