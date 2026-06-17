@@ -1,21 +1,21 @@
 ---
-import type { GetStaticPaths, InferGetStaticPropsType } from 'astro';
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import Hero from '../../components/Hero.astro';
-import Paragraph from '../../components/blocks/Paragraph.astro';
-import ParagraphImage from '../../components/blocks/ParagraphImage.astro';
-import Building from '../../components/blocks/Building.astro';
-import Partners from '../../components/blocks/Partners.astro';
-import { fetchBuilding } from '../../lib/strapi';
+import type { GetStaticPaths, InferGetStaticPropsType } from "astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Hero from "../../components/Hero.astro";
+import Paragraph from "../../components/blocks/Paragraph.astro";
+import ParagraphImage from "../../components/blocks/ParagraphImage.astro";
+import BuildingBlock from "../../components/blocks/Building.astro";
+import Partners from "../../components/blocks/Partners.astro";
+import { fetchBuilding } from "../../lib/strapi";
 
 export const getStaticPaths = (async () => {
-  const locales = ['en', 'fr', 'nl'];
+  const locales = ["en", "fr", "nl"];
 
   const pages = await Promise.all(
     locales.map(async (locale) => {
       const building = await fetchBuilding(locale);
       return { params: { locale }, props: { building, locale } };
-    })
+    }),
   );
 
   return pages;
@@ -34,19 +34,21 @@ const { building, locale } = Astro.props;
 >
   <Hero title={building.hero} image={building.image} video={null} />
   <div id="content" tabindex="-1"></div>
-  {building.blocks.map((block) => {
-    if (block.__component === 'blocks.paragraph') {
-      return <Paragraph {...block} />;
-    }
-    if (block.__component === 'blocks.paragraph-image') {
-      return <ParagraphImage {...block} />;
-    }
-    if (block.__component === 'blocks.building') {
-      return <Building {...block} />;
-    }
-    if (block.__component === 'blocks.partners') {
-      return <Partners {...block} />;
-    }
-    return null;
-  })}
+  {
+    building.blocks.map((block) => {
+      if (block.__component === "blocks.paragraph") {
+        return <Paragraph {...block} />;
+      }
+      if (block.__component === "blocks.paragraph-image") {
+        return <ParagraphImage {...block} />;
+      }
+      if (block.__component === "blocks.building") {
+        return <BuildingBlock {...block} />;
+      }
+      if (block.__component === "blocks.partners") {
+        return <Partners {...block} />;
+      }
+      return null;
+    })
+  }
 </BaseLayout>

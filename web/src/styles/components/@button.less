@@ -2,62 +2,51 @@
 @import "../@helpers.less";
 @import "../@variables.less";
 
-
 .button-base() {
+  .button {
+    color: @color-primary;
+    font-size: 1rem;
 
-    .button {
-        color: @color-primary;
-        font-size: 1rem;
-
-        &:hover {
-            background-color: @color-primary;
-            color: white;
-        }
+    &:hover {
+      background-color: @color-primary;
+      color: white;
     }
+  }
 
-    .button--white {
-        color: white;
-        border-color: white;
+  .button--white {
+    color: white;
+    border-color: white;
 
-        &:hover {
-            background-color: white;
-            color: @color-primary;
-        }
+    &:hover {
+      background-color: white;
+      color: @color-primary;
     }
+  }
 }
-
 
 .button-mobile() {
 }
 
-
 .button-after-mobile() {
 }
-
 
 .button-tablet() {
 }
 
-
 .button-tabletPortrait() {
 }
-
 
 .button-tabletLandscape() {
 }
 
-
 .button-after-tablet() {
 }
 
-
 .button-laptop() {
 }
-
 
 .button-desktop() {
 }
 
 .button-between-laptop-desktop() {
 }
-
