@@ -1,0 +1,47 @@
+---
+import type { GetStaticPaths, InferGetStaticPropsType } from 'astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { fetchCredits } from '../../lib/strapi';
+
+export const getStaticPaths = (async () => {
+  const locales = ['en', 'fr', 'nl'];
+
+  const pages = await Promise.all(
+    locales.map(async (locale) => {
+      const credits = await fetchCredits(locale);
+      return { params: { locale }, props: { credits, locale } };
+    })
+  );
+
+  return pages;
+}) satisfies GetStaticPaths;
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+const { credits, locale } = Astro.props;
+
+// Legacy Credits view hardcodes <div class="section"> and never applies a
+// background_color modifier (it bypasses _Section.cshtml). Parity: no bg class.
+---
+
+<BaseLayout
+  title={credits.browser_title ?? credits.title ?? undefined}
+  description={credits.google_description ?? undefined}
+  locale={locale}
+  greenMenu={true}
+>
+  {credits.show && (
+    <div class="section">
+      <article class="section__inner section__inner--terms">
+        {credits.show_title && credits.title && (
+          <h4 class="section__title">{credits.title}</h4>
+        )}
+        <div class="paragraph">
+          <div class="paragraph__content">
+            <Fragment set:html={credits.text ?? ''} />
+          </div>
+        </div>
+      </article>
+    </div>
+  )}
+</BaseLayout>

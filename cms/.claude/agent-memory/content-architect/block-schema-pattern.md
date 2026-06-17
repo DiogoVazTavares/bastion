@@ -23,6 +23,7 @@ metadata:
 - Non-localised fields: `"pluginOptions": { "i18n": { "localized": false } }`
 - CKEditor5: `"type": "customField", "customField": "plugin::ckeditor5.CKEditor", "options": { "preset": "bastion" }`
 - Media (single image, non-localised): `"type": "media", "multiple": false, "required": false, "allowedTypes": ["images"]` + `localized: false`
+- Media (multiple images, non-localised): `"type": "media", "multiple": true, "required": false, "allowedTypes": ["images"]` + `localized: false`
 - Enumeration (background_color): `"type": "enumeration", "enum": ["White","Lightgray","Gray","Green"], "default": "White"` + `localized: false`
 - Boolean (show/show_title): `"type": "boolean", "default": true` + `localized: true`
 
@@ -34,6 +35,9 @@ C# base-class fields (`show`, `show_title`, `background_color`) copied into ever
 |---|---|---|---|
 | `blocks.paragraph` | `PanelText` | #7 | `cms/src/components/blocks/paragraph/schema.json` |
 | `blocks.paragraph-image` | `PanelTextImage` | #8 | `cms/src/components/blocks/paragraph-image/schema.json` |
+| `blocks.building` | `PanelBuilding` | #9 | `cms/src/components/blocks/building/schema.json` |
+| `blocks.building-item` | `PanelBuilding.Item` | #9 | `cms/src/components/blocks/building-item/schema.json` |
+| `blocks.partners` | `PanelPartners` | #10 | `cms/src/components/blocks/partners/schema.json` |
 
 ## Reference
 Contact schema at `cms/src/api/contact/content-types/contact/schema.json` is the field-definition reference pattern.
