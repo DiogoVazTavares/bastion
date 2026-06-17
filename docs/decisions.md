@@ -61,6 +61,41 @@ Verify the live enum without the admin UI by reading the internal store:
 `sqlite3 cms/.tmp/data.db "SELECT value FROM strapi_core_store_settings WHERE key='strapi_content_types_schema';"`
 (Strapi rewrites this from the in-memory schema on every boot.)
 
+## 2026-06-17 — Building page migration: blocks dynamic zone must be localized:true (root cause + final fix)
+
+**Investigation history.** Two schema changes were made to unblock the Building migration:
+
+1. **First hypothesis (wrong root cause):** `building-item.big_image/small_image` were set to
+   `localized: true` to prevent an observed ID-collision cascade where each locale PUT wiped the
+   previous locale's building items. This stopped the cascade but did not fix published-locale wipeout.
+
+2. **True root cause (Strapi 5.48.0, confirmed):** The `blocks` dynamic zone on the `building`
+   schema had no `"pluginOptions": { "i18n": { "localized": true } }` annotation. Strapi v5 i18n
+   treats a dynamic zone as non-localized by default. After each locale PUT,
+   `syncNonLocalizedAttributes` (`localizations.js`) propagates the source locale's entire `blocks`
+   payload to all other same-status locale variants; `updateComponents` then deletes and recreates
+   the target locale's component rows from the source locale's data, wiping en and fr published items
+   after each subsequent nl PUT.
+
+**Final schema state (applied 2026-06-17):**
+- `cms/src/api/building/content-types/building/schema.json` — `blocks` DZ has
+  `"pluginOptions": { "i18n": { "localized": true } }`. This stops `syncNonLocalizedAttributes`
+  from touching `blocks`, so each locale's items are never overwritten.
+- `cms/src/components/blocks/building-item.json` — `big_image` and `small_image` reverted to
+  `"localized": false` (matches C# `[Picture(Localized = false)]`). The first workaround is no
+  longer needed: with the DZ localized, the ID-collision path does not exist.
+
+**Pattern — applies to all multi-block pages.** All future multi-block page single-types
+(Accommodation, Services, Location, Home) must include `"pluginOptions": { "i18n": { "localized": true } }`
+on their `blocks` dynamic zone attribute from the start. Logged in `docs/model-mapping.md` deviation #5.
+
+**ETL impact.** No ETL change needed. The `putLocale` helper already writes `?status=published`.
+
+**Rebuild required.** After this schema change, the Strapi dev server must be fully rebuilt
+(`npm run clean && npm run develop`) and browser site data for `localhost:1337` must be cleared
+(DevTools → Application → Clear site data). A plain hard-refresh is insufficient — the admin
+keeps an IndexedDB schema cache. See also the 2026-06-17 "clean rebuild" entry above.
+
 ## 2026-06-11 — Backup Worker needs a directory owner
 
 The content-backup Cron Worker (ADR 0004) fits none of the existing agent directories

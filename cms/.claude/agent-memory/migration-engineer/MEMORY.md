@@ -1,1 +1,2 @@
 - [Asset resolver](project_asset_resolver.md) — identity key, dedup strategy, manifest path, uploadMedia altText extension (issue #31)
+- [Building schema blocker](project_building_schema_blocker.md) — Strapi v5 component ID collision: building-item big_image/small_image must be localized:true before migration can complete
