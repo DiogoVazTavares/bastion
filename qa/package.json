@@ -1,0 +1,16 @@
+{
+  "name": "bastion-qa",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Parity QA harness — Playwright + pixelmatch",
+  "type": "module",
+  "scripts": {
+    "capture-baseline": "node capture-baseline.js",
+    "compare": "node compare.js"
+  },
+  "dependencies": {
+    "playwright": "^1.44.0",
+    "pixelmatch": "^6.0.0",
+    "pngjs": "^7.0.0"
+  }
+}

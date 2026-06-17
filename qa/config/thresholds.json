@@ -1,0 +1,12 @@
+{
+  "default_threshold": 0.05,
+  "per_page": {
+    "credits": 0.05,
+    "terms": 0.05
+  },
+  "mask_regions": {
+    "credits": []
+  },
+  "known_acceptable_diffs": [
+  ]
+}

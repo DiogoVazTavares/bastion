@@ -1,0 +1,352 @@
+#!/usr/bin/env node
+/**
+ * Credits page parity check
+ * Compares production (bastiontower.com) vs local dev (localhost:4321)
+ * Checks: DOM structure, content, meta, CSS classes, visual diff
+ */
+import { chromium } from 'playwright';
+import { PNG } from 'pngjs';
+import pixelmatch from 'pixelmatch';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const PROD_BASE = 'https://bastiontower.com';
+const LOCAL_BASE = 'http://localhost:4321';
+const SCREENSHOTS_DIR = path.join(__dirname, 'screenshots', 'credits');
+
+// Credits uses capital C on production
+const LOCALES = [
+  { locale: 'en', prod: '/en/Credits', local: '/en/credits' },
+  { locale: 'fr', prod: '/fr/Credits', local: '/fr/credits' },
+  { locale: 'nl', prod: '/nl/Credits', local: '/nl/credits' },
+];
+
+const VIEWPORTS = [
+  { name: 'desktop', width: 1280, height: 800 },
+  { name: 'mobile', width: 375, height: 812 },
+];
+
+const PIXEL_THRESHOLD = 0.05; // 5% tolerance
+
+// Ensure screenshots dir exists
+fs.mkdirSync(SCREENSHOTS_DIR, { recursive: true });
+
+function extractMeta(page) {
+  return page.evaluate(() => {
+    const getMeta = (selector) =>
+      document.querySelector(selector)?.getAttribute('content') ?? null;
+    const hreflangs = Array.from(
+      document.querySelectorAll('link[rel="alternate"][hreflang]')
+    ).map((el) => ({ hreflang: el.getAttribute('hreflang'), href: el.getAttribute('href') }));
+    const canonical = document.querySelector('link[rel="canonical"]')?.getAttribute('href') ?? null;
+    return {
+      title: document.title,
+      description: getMeta('meta[name="description"]'),
+      ogTitle: getMeta('meta[property="og:title"]'),
+      canonical,
+      hreflangs,
+    };
+  });
+}
+
+function extractStructure(page) {
+  return page.evaluate(() => {
+    // Extract key structural elements for Credits (flat paragraph-style page)
+    const results = {};
+
+    // All BEM class names on main content wrappers
+    // SVG elements have className as SVGAnimatedString, coerce with String()
+    const allClasses = Array.from(document.querySelectorAll('[class]'))
+      .map((el) => ({
+        tag: el.tagName.toLowerCase(),
+        classes: (typeof el.className === 'string' ? el.className : String(el.className.baseVal || '')).trim(),
+      }))
+      .filter((e) => e.classes.length > 0);
+
+    // Headings
+    results.headings = Array.from(document.querySelectorAll('h1,h2,h3,h4,h5,h6')).map((h) => ({
+      tag: h.tagName.toLowerCase(),
+      text: h.textContent.trim(),
+      classes: h.className.trim(),
+    }));
+
+    // Main content area — look for panel/section wrappers
+    const sections = Array.from(document.querySelectorAll('section, .panel, [class*="panel"], [class*="credits"], [class*="paragraph"]'));
+    results.sections = sections.map((s) => ({
+      tag: s.tagName.toLowerCase(),
+      classes: s.className.trim(),
+      id: s.id || null,
+    }));
+
+    // Body text content (inner text of main)
+    const main = document.querySelector('main') ?? document.body;
+    results.bodyText = main.innerText.replace(/\s+/g, ' ').trim().substring(0, 2000);
+
+    // Background color classes (show/background_color)
+    results.backgroundClasses = Array.from(
+      document.querySelectorAll('[class*="background"], [class*="bg-"], [class*="lightgray"], [class*="gray"], [class*="green"], [class*="white"]')
+    ).map((el) => ({ tag: el.tagName.toLowerCase(), classes: el.className.trim() }));
+
+    // Check for show_title: any visible panel title
+    results.panelTitles = Array.from(document.querySelectorAll('.panel__title, [class*="panel-title"], [class*="panel__title"]')).map((el) => ({
+      text: el.textContent.trim(),
+      classes: el.className.trim(),
+      visible: el.offsetParent !== null,
+    }));
+
+    // Language switcher
+    results.langSwitcher = Array.from(document.querySelectorAll('[class*="lang"], [class*="language"], nav a[href*="/en/"], nav a[href*="/fr/"], nav a[href*="/nl/"]')).map((el) => ({
+      tag: el.tagName.toLowerCase(),
+      text: el.textContent.trim(),
+      href: el.getAttribute('href'),
+      classes: el.className.trim(),
+    }));
+
+    // All unique class names (for BEM diff)
+    results.uniqueClasses = [...new Set(allClasses.map((e) => e.classes.split(' ')).flat())].sort();
+
+    return results;
+  });
+}
+
+function diffPixels(prodPath, localPath, diffPath) {
+  const prodImg = PNG.sync.read(fs.readFileSync(prodPath));
+  const localImg = PNG.sync.read(fs.readFileSync(localPath));
+
+  // Resize to match (use min dimensions)
+  const width = Math.min(prodImg.width, localImg.width);
+  const height = Math.min(prodImg.height, localImg.height);
+
+  const diff = new PNG({ width, height });
+
+  // Crop both to same size if needed
+  const prodData = prodImg.width === width && prodImg.height === height
+    ? prodImg.data
+    : cropPNG(prodImg, width, height);
+  const localData = localImg.width === width && localImg.height === height
+    ? localImg.data
+    : cropPNG(localImg, width, height);
+
+  const numDiffPixels = pixelmatch(prodData, localData, diff.data, width, height, {
+    threshold: 0.1,
+    includeAA: false,
+  });
+
+  fs.writeFileSync(diffPath, PNG.sync.write(diff));
+
+  const totalPixels = width * height;
+  const diffPercent = (numDiffPixels / totalPixels) * 100;
+  return { numDiffPixels, totalPixels, diffPercent };
+}
+
+function cropPNG(img, width, height) {
+  const cropped = Buffer.alloc(width * height * 4);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const srcIdx = (y * img.width + x) * 4;
+      const dstIdx = (y * width + x) * 4;
+      cropped[dstIdx] = img.data[srcIdx];
+      cropped[dstIdx + 1] = img.data[srcIdx + 1];
+      cropped[dstIdx + 2] = img.data[srcIdx + 2];
+      cropped[dstIdx + 3] = img.data[srcIdx + 3];
+    }
+  }
+  return cropped;
+}
+
+function diffArrays(label, prodArr, localArr, keyFn) {
+  const findings = [];
+  const prodKeys = prodArr.map(keyFn);
+  const localKeys = localArr.map(keyFn);
+  const onlyInProd = prodKeys.filter((k) => !localKeys.includes(k));
+  const onlyInLocal = localKeys.filter((k) => !prodKeys.includes(k));
+  if (onlyInProd.length) findings.push(`  MISSING in local: ${JSON.stringify(onlyInProd)}`);
+  if (onlyInLocal.length) findings.push(`  EXTRA in local: ${JSON.stringify(onlyInLocal)}`);
+  return findings;
+}
+
+async function checkLocale(browser, localeInfo, report) {
+  const { locale, prod: prodPath, local: localPath } = localeInfo;
+  const prodUrl = PROD_BASE + prodPath;
+  const localUrl = LOCAL_BASE + localPath;
+
+  console.log(`\n=== Checking locale: ${locale} ===`);
+  const localFindings = [];
+
+  for (const viewport of VIEWPORTS) {
+    const ctx = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height } });
+    const prodPage = await ctx.newPage();
+    const localPage = await ctx.newPage();
+
+    // Navigate
+    let prodStatus, localStatus;
+    try {
+      const prodResp = await prodPage.goto(prodUrl, { waitUntil: 'networkidle', timeout: 30000 });
+      prodStatus = prodResp?.status();
+    } catch (e) {
+      localFindings.push(`FATAL: production page failed to load: ${e.message}`);
+      await ctx.close();
+      continue;
+    }
+
+    try {
+      const localResp = await localPage.goto(localUrl, { waitUntil: 'networkidle', timeout: 30000 });
+      localStatus = localResp?.status();
+    } catch (e) {
+      localFindings.push(`FATAL: local page failed to load: ${e.message}`);
+      await ctx.close();
+      continue;
+    }
+
+    if (prodStatus !== 200) localFindings.push(`Production returned HTTP ${prodStatus}`);
+    if (localStatus !== 200) localFindings.push(`Local returned HTTP ${localStatus}`);
+
+    // Screenshots
+    const prodScreenPath = path.join(SCREENSHOTS_DIR, `${locale}-${viewport.name}-prod.png`);
+    const localScreenPath = path.join(SCREENSHOTS_DIR, `${locale}-${viewport.name}-local.png`);
+    const diffScreenPath = path.join(SCREENSHOTS_DIR, `${locale}-${viewport.name}-diff.png`);
+
+    await prodPage.screenshot({ path: prodScreenPath, fullPage: true });
+    await localPage.screenshot({ path: localScreenPath, fullPage: true });
+
+    // Pixel diff
+    const pixelResult = diffPixels(prodScreenPath, localScreenPath, diffScreenPath);
+    const pass = pixelResult.diffPercent <= PIXEL_THRESHOLD * 100;
+    console.log(`  [${viewport.name}] pixel diff: ${pixelResult.diffPercent.toFixed(2)}% — ${pass ? 'PASS' : 'FAIL'}`);
+    if (!pass) {
+      localFindings.push(`Visual diff FAIL at ${viewport.name}: ${pixelResult.diffPercent.toFixed(2)}% pixels differ (threshold ${PIXEL_THRESHOLD * 100}%)`);
+    }
+
+    // Only do structural/meta checks once (desktop)
+    if (viewport.name === 'desktop') {
+      const [prodMeta, localMeta] = await Promise.all([extractMeta(prodPage), extractMeta(localPage)]);
+      const [prodStruct, localStruct] = await Promise.all([extractStructure(prodPage), extractStructure(localPage)]);
+
+      // --- META checks ---
+      if (!localMeta.title || localMeta.title.trim() === '') {
+        localFindings.push('META: <title> is empty');
+      } else if (prodMeta.title !== localMeta.title) {
+        localFindings.push(`META: <title> mismatch\n    prod:  "${prodMeta.title}"\n    local: "${localMeta.title}"`);
+      }
+
+      if (!localMeta.description || localMeta.description.trim() === '') {
+        localFindings.push('META: meta description is empty');
+      } else if (prodMeta.description !== localMeta.description) {
+        localFindings.push(`META: description mismatch\n    prod:  "${prodMeta.description}"\n    local: "${localMeta.description}"`);
+      }
+
+      // Hreflang check
+      const prodHreflangs = prodMeta.hreflangs.map((h) => h.hreflang).sort();
+      const localHreflangs = localMeta.hreflangs.map((h) => h.hreflang).sort();
+      if (prodHreflangs.length === 0 && localHreflangs.length === 0) {
+        localFindings.push('META: hreflang tags absent on both prod and local');
+      } else if (JSON.stringify(prodHreflangs) !== JSON.stringify(localHreflangs)) {
+        localFindings.push(`META: hreflang mismatch\n    prod:  ${JSON.stringify(prodHreflangs)}\n    local: ${JSON.stringify(localHreflangs)}`);
+      }
+
+      // --- STRUCTURE checks ---
+
+      // Headings
+      const headingFindings = diffArrays('headings', prodStruct.headings, localStruct.headings, (h) => `${h.tag}:${h.text.substring(0, 80)}`);
+      if (headingFindings.length) localFindings.push(`STRUCTURE: heading mismatch:\n${headingFindings.join('\n')}`);
+
+      // Sections / panels
+      const sectionFindings = diffArrays('sections', prodStruct.sections, localStruct.sections, (s) => `${s.tag}:${s.classes}`);
+      if (sectionFindings.length) localFindings.push(`STRUCTURE: section/panel class mismatch:\n${sectionFindings.join('\n')}`);
+
+      // BEM class names — report any prod classes missing from local
+      const missingClasses = prodStruct.uniqueClasses.filter(
+        (cls) => !localStruct.uniqueClasses.includes(cls) && cls.length > 2
+      );
+      const extraClasses = localStruct.uniqueClasses.filter(
+        (cls) => !prodStruct.uniqueClasses.includes(cls) && cls.length > 2
+      );
+
+      // Filter to panel/content BEM classes only (ignore unrelated layout/nav classes at this stage)
+      const relevantMissing = missingClasses.filter((c) =>
+        /panel|paragraph|credits|text|title|background|content|section|block|show/.test(c)
+      );
+      const relevantExtra = extraClasses.filter((c) =>
+        /panel|paragraph|credits|text|title|background|content|section|block|show/.test(c)
+      );
+
+      if (relevantMissing.length) {
+        localFindings.push(`CSS CLASSES: prod classes MISSING from local:\n  ${relevantMissing.join('\n  ')}`);
+      }
+      if (relevantExtra.length) {
+        localFindings.push(`CSS CLASSES: EXTRA classes in local (not in prod):\n  ${relevantExtra.join('\n  ')}`);
+      }
+
+      // Panel titles visible
+      if (prodStruct.panelTitles.length && !localStruct.panelTitles.length) {
+        localFindings.push('STRUCTURE: panel titles present on prod but absent on local');
+      }
+
+      // Content spot-check: first 300 chars of body text
+      const prodText = prodStruct.bodyText.substring(0, 300).replace(/\s+/g, ' ');
+      const localText = localStruct.bodyText.substring(0, 300).replace(/\s+/g, ' ');
+      if (prodText !== localText) {
+        localFindings.push(`CONTENT: body text mismatch (first 300 chars)\n    prod:  "${prodText}"\n    local: "${localText}"`);
+      }
+
+      // Save raw data for debugging
+      const debugPath = path.join(SCREENSHOTS_DIR, `${locale}-debug.json`);
+      fs.writeFileSync(debugPath, JSON.stringify({ prodMeta, localMeta, prodStruct, localStruct }, null, 2));
+    }
+
+    await ctx.close();
+  }
+
+  report[locale] = {
+    pass: localFindings.length === 0,
+    findings: localFindings,
+  };
+}
+
+async function main() {
+  const browser = await chromium.launch({ headless: true });
+  const report = {};
+
+  for (const localeInfo of LOCALES) {
+    await checkLocale(browser, localeInfo, report);
+  }
+
+  await browser.close();
+
+  // Print report
+  console.log('\n\n========================================');
+  console.log('CREDITS PARITY REPORT');
+  console.log('========================================');
+
+  let overallPass = true;
+  for (const [locale, result] of Object.entries(report)) {
+    const status = result.pass ? 'PASS' : 'FAIL';
+    console.log(`\n[${locale}] ${status}`);
+    if (result.findings.length) {
+      overallPass = false;
+      for (const f of result.findings) {
+        console.log(`  - ${f}`);
+      }
+    }
+  }
+
+  console.log('\n========================================');
+  console.log(`OVERALL: ${overallPass ? 'PASS' : 'FAIL'}`);
+  console.log('========================================');
+
+  // Write JSON report
+  const reportPath = path.join(SCREENSHOTS_DIR, 'report.json');
+  fs.writeFileSync(reportPath, JSON.stringify({ timestamp: new Date().toISOString(), locales: report }, null, 2));
+  console.log(`\nReport written to: ${reportPath}`);
+  console.log(`Screenshots in:    ${SCREENSHOTS_DIR}`);
+
+  process.exit(overallPass ? 0 : 1);
+}
+
+main().catch((e) => {
+  console.error('FATAL:', e);
+  process.exit(2);
+});
