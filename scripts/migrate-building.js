@@ -90,6 +90,12 @@ function toObjectId(val) {
   return val;
 }
 
+// MongoDB stores C# PictureRef.Id as _id; resolveAssets expects Id (capital I).
+function pic(ref) {
+  if (!ref) return null;
+  return ref.Id != null ? ref : { ...ref, Id: ref._id };
+}
+
 /**
  * Resolve _DBRef.c references to full documents.
  * For PanelBuilding, also fetches its items from PanelBuilding-Item.
@@ -141,13 +147,14 @@ async function mapPanel(panel, manifest, fetchBytes, upload) {
   if (type === 'PanelTextImage') {
     let imageId = null;
     if (panel.Image) {
-      const result = await resolveAssets([panel.Image], manifest, {
+      const ref = pic(panel.Image);
+      const result = await resolveAssets([ref], manifest, {
         fetchBytes,
         upload,
         verify: verifyMedia,
       });
       Object.assign(manifest, result.manifest);
-      imageId = result.ids.get(panel.Image.Id) ?? null;
+      imageId = result.ids.get(ref.Id) ?? null;
     }
     return { __component: PANEL_TYPES.PanelTextImage, ...mapParagraphImage(panel, imageId) };
   }
@@ -156,9 +163,9 @@ async function mapPanel(panel, manifest, fetchBytes, upload) {
     const items = panel.Items ?? [];
     const itemImageIds = [];
     for (const item of items) {
-      const refs = [];
-      if (item.BigImage) refs.push(item.BigImage);
-      if (item.SmallImage) refs.push(item.SmallImage);
+      const bigRef   = pic(item.BigImage);
+      const smallRef = pic(item.SmallImage);
+      const refs = [bigRef, smallRef].filter(Boolean);
       let bigImageId = null;
       let smallImageId = null;
       if (refs.length > 0) {
@@ -168,8 +175,8 @@ async function mapPanel(panel, manifest, fetchBytes, upload) {
           verify: verifyMedia,
         });
         Object.assign(manifest, result.manifest);
-        bigImageId = item.BigImage ? (result.ids.get(item.BigImage.Id) ?? null) : null;
-        smallImageId = item.SmallImage ? (result.ids.get(item.SmallImage.Id) ?? null) : null;
+        bigImageId   = bigRef   ? (result.ids.get(bigRef.Id)   ?? null) : null;
+        smallImageId = smallRef ? (result.ids.get(smallRef.Id) ?? null) : null;
       }
       itemImageIds.push({ bigImageId, smallImageId });
     }
@@ -177,7 +184,8 @@ async function mapPanel(panel, manifest, fetchBytes, upload) {
   }
 
   if (type === 'PanelPartners') {
-    const imageRefs = panel.Images ?? [];
+    const rawRefs  = panel.Images ?? [];
+    const imageRefs = rawRefs.map(pic);
     let imageIds = [];
     if (imageRefs.length > 0) {
       const result = await resolveAssets(imageRefs, manifest, {
@@ -186,7 +194,7 @@ async function mapPanel(panel, manifest, fetchBytes, upload) {
         verify: verifyMedia,
       });
       Object.assign(manifest, result.manifest);
-      imageIds = imageRefs.map(ref => result.ids.get(ref.Id)).filter(id => id != null);
+      imageIds = imageRefs.map(r => result.ids.get(r.Id)).filter(id => id != null);
     }
     return { __component: PANEL_TYPES.PanelPartners, ...mapPartners(panel, imageIds) };
   }
@@ -236,13 +244,14 @@ async function main() {
     let heroImageId = null;
     if (locale === 'en' && doc.Image) {
       process.stdout.write(`  [${locale}] uploading hero image… `);
-      const result = await resolveAssets([doc.Image], manifest, {
+      const heroRef = pic(doc.Image);
+      const result = await resolveAssets([heroRef], manifest, {
         fetchBytes,
         upload,
         verify: verifyMedia,
       });
       Object.assign(manifest, result.manifest);
-      heroImageId = result.ids.get(doc.Image.Id) ?? null;
+      heroImageId = result.ids.get(heroRef.Id) ?? null;
       assetStats.uploaded += result.stats.uploaded;
       assetStats.reused += result.stats.reused;
       console.log(result.stats.uploaded > 0 ? 'uploaded ✓' : 'reused ✓');
