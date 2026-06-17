@@ -2,7 +2,7 @@
 interface Props {
   show: boolean;
   show_title: boolean;
-  background_color: 'White' | 'Lightgray' | 'Gray' | 'Green';
+  background_color: 'White' | 'Lightgray' | 'Gray' | 'Blue';
   items: Array<{
     big_image: { url: string; alternativeText: string | null } | null;
     small_image: { url: string; alternativeText: string | null } | null;
@@ -16,7 +16,7 @@ const { show, background_color, items } = Astro.props;
 const bgClass: Record<string, string> = {
   Lightgray: 'section--bg-light-gray',
   Gray: 'section--bg-gray',
-  Green: 'section--bg-green',
+  Blue: 'section--bg-green',
 };
 
 const sectionClass = ['section', bgClass[background_color]].filter(Boolean).join(' ');
