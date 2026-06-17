@@ -20,12 +20,8 @@ type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
 const { credits, locale } = Astro.props;
 
-const bgClass: Record<string, string> = {
-  Lightgray: 'section--bg-light-gray',
-  Gray: 'section--bg-gray',
-  Green: 'section--bg-green',
-};
-const sectionClass = ['section', bgClass[credits.background_color]].filter(Boolean).join(' ');
+// Legacy Credits view hardcodes <div class="section"> and never applies a
+// background_color modifier (it bypasses _Section.cshtml). Parity: no bg class.
 ---
 
 <BaseLayout
@@ -35,7 +31,7 @@ const sectionClass = ['section', bgClass[credits.background_color]].filter(Boole
   greenMenu={true}
 >
   {credits.show && (
-    <div class={sectionClass}>
+    <div class="section">
       <article class="section__inner section__inner--terms">
         {credits.show_title && credits.title && (
           <h4 class="section__title">{credits.title}</h4>
