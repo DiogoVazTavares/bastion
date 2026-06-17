@@ -94,21 +94,25 @@ function toObjectId(val) {
  * Resolve _DBRef.c references to full documents.
  * For PanelBuilding, also fetches its items from PanelBuilding-Item.
  */
+// MongoDB v3.x DBRef: .namespace/.oid  |  v4.x+: .$ref/.$id
+function refColl(r) { return r.namespace ?? r.$ref; }
+function refId(r)   { return r.oid ?? r.$id; }
+
 async function fetchPanels(db, doc) {
   const refs = doc._DBRef?.c ?? [];
   const panels = [];
   for (const ref of refs) {
-    const collName = ref.$ref;
-    const panel = await db.collection(collName).findOne({ _id: toObjectId(ref.$id) });
+    const collName = refColl(ref);
+    const panel = await db.collection(collName).findOne({ _id: toObjectId(refId(ref)) });
     if (!panel) {
-      console.warn(`  WARNING: ${collName}/${ref.$id} not found — skipped`);
+      console.warn(`  WARNING: ${collName}/${refId(ref)} not found — skipped`);
       continue;
     }
     if (collName === 'PanelBuilding') {
       const itemRefs = panel._DBRef?.c ?? [];
       const items = [];
       for (const ir of itemRefs) {
-        const item = await db.collection(ir.$ref).findOne({ _id: toObjectId(ir.$id) });
+        const item = await db.collection(refColl(ir)).findOne({ _id: toObjectId(refId(ir)) });
         if (item) items.push(item);
       }
       panels.push({ ...panel, _t: collName, Items: items });
