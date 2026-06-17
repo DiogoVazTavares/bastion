@@ -96,6 +96,13 @@ function pic(ref) {
   return ref.Id != null ? ref : { ...ref, Id: ref._id };
 }
 
+// C# arrays may deserialise as {"0": x, "1": x} objects rather than BSON arrays.
+function toArray(val) {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  return Object.values(val);
+}
+
 /**
  * Resolve _DBRef.c references to full documents.
  * For PanelBuilding, also fetches its items from PanelBuilding-Item.
@@ -160,7 +167,7 @@ async function mapPanel(panel, manifest, fetchBytes, upload) {
   }
 
   if (type === 'PanelBuilding') {
-    const items = panel.Items ?? [];
+    const items = toArray(panel.Items);
     const itemImageIds = [];
     for (const item of items) {
       const bigRef   = pic(item.BigImage);
@@ -184,7 +191,7 @@ async function mapPanel(panel, manifest, fetchBytes, upload) {
   }
 
   if (type === 'PanelPartners') {
-    const rawRefs  = panel.Images ?? [];
+    const rawRefs  = toArray(panel.Images);
     const imageRefs = rawRefs.map(pic);
     let imageIds = [];
     if (imageRefs.length > 0) {
