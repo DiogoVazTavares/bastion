@@ -5,7 +5,7 @@ interface Props {
   image: { url: string; alternativeText: string | null } | null;
   show: boolean;
   show_title: boolean;
-  background_color: 'White' | 'Lightgray' | 'Gray' | 'Green';
+  background_color: 'White' | 'Lightgray' | 'Gray' | 'Blue';
 }
 
 const { title, text, image, show, show_title, background_color } = Astro.props;
@@ -13,7 +13,7 @@ const { title, text, image, show, show_title, background_color } = Astro.props;
 const bgClass: Record<string, string> = {
   Lightgray: 'section--bg-light-gray',
   Gray: 'section--bg-gray',
-  Green: 'section--bg-green',
+  Blue: 'section--bg-green',
 };
 
 const sectionClass = ['section', bgClass[background_color]].filter(Boolean).join(' ');

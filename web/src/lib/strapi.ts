@@ -3,7 +3,7 @@ export interface TermsData {
   text: string | null;
   show: boolean;
   show_title: boolean;
-  background_color: 'White' | 'Lightgray' | 'Gray' | 'Green';
+  background_color: 'White' | 'Lightgray' | 'Gray' | 'Blue';
   footer_title: string | null;
   browser_title: string | null;
   google_description: string | null;
@@ -36,7 +36,7 @@ export interface CreditsData {
   text: string | null;
   show: boolean;
   show_title: boolean;
-  background_color: 'White' | 'Lightgray' | 'Gray' | 'Green';
+  background_color: 'White' | 'Lightgray' | 'Gray' | 'Blue';
   footer_title: string | null;
   browser_title: string | null;
   google_description: string | null;
