@@ -64,6 +64,59 @@ export async function fetchCredits(locale: string): Promise<CreditsData> {
   return data as CreditsData;
 }
 
+export type BgColor = 'White' | 'Lightgray' | 'Gray' | 'Blue';
+
+export interface MediaRef {
+  url: string;
+  alternativeText: string | null;
+}
+
+export interface BuildingItemData {
+  big_image: MediaRef | null;
+  small_image: MediaRef | null;
+  title: string | null;
+  text: string | null;
+}
+
+export type BuildingBlock =
+  | { __component: 'blocks.paragraph'; show: boolean; show_title: boolean; background_color: BgColor; title: string | null; text: string | null }
+  | { __component: 'blocks.paragraph-image'; show: boolean; show_title: boolean; background_color: BgColor; title: string | null; text: string | null; image: MediaRef | null }
+  | { __component: 'blocks.building'; show: boolean; show_title: boolean; background_color: BgColor; items: BuildingItemData[] }
+  | { __component: 'blocks.partners'; show: boolean; show_title: boolean; background_color: BgColor; title: string | null; text: string | null; images: MediaRef[] };
+
+export interface BuildingData {
+  title: string | null;
+  hero: string | null;
+  image: MediaRef | null;
+  browser_title: string | null;
+  google_description: string | null;
+  footer_title: string | null;
+  blocks: BuildingBlock[];
+}
+
+export async function fetchBuilding(locale: string): Promise<BuildingData> {
+  const base = import.meta.env.STRAPI_URL;
+  const token = import.meta.env.STRAPI_TOKEN;
+
+  if (!base) throw new Error('STRAPI_URL is not set');
+
+  const url = new URL('/api/building', base);
+  url.searchParams.set('locale', locale);
+  url.searchParams.set('populate', 'deep');
+
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const res = await fetch(url.toString(), { headers });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch Building [${locale}]: ${res.status} ${res.statusText}`);
+  }
+
+  const { data } = await res.json();
+  return data as BuildingData;
+}
+
 export interface ContactData {
   title: string | null;
   text: string | null;

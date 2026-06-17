@@ -2,22 +2,23 @@
 interface Props {
   locale: string;
   greenMenu?: boolean;
+  currentSlug?: string;
 }
 
-const { locale, greenMenu = false } = Astro.props;
+const { locale, greenMenu = false, currentSlug } = Astro.props;
 
 const navLinks = [
-  { label: 'Building',      href: `/${locale}/Building` },
-  { label: 'Accommodation', href: `/${locale}/Accommodation` },
-  { label: 'Services',      href: `/${locale}/Services` },
-  { label: 'Location',      href: `/${locale}/Location` },
+  { label: 'Building',      href: `/${locale}/building` },
+  { label: 'Accommodation', href: `/${locale}/accommodation` },
+  { label: 'Services',      href: `/${locale}/services` },
+  { label: 'Location',      href: `/${locale}/location` },
   { label: 'Contact',       href: '#contact' },
 ];
 
 const langLinks = [
-  { label: 'EN', href: `/en/terms`, active: locale === 'en' },
-  { label: 'FR', href: `/fr/terms`, active: locale === 'fr' },
-  { label: 'NL', href: `/nl/terms`, active: locale === 'nl' },
+  { label: 'EN', href: currentSlug ? `/en/${currentSlug}` : `/en/terms`, active: locale === 'en' },
+  { label: 'FR', href: currentSlug ? `/fr/${currentSlug}` : `/fr/terms`, active: locale === 'fr' },
+  { label: 'NL', href: currentSlug ? `/nl/${currentSlug}` : `/nl/terms`, active: locale === 'nl' },
 ];
 
 const leftLinks  = navLinks.slice(0, 3);
@@ -25,8 +26,8 @@ const rightLinks = navLinks.slice(3);
 ---
 
 <!-- Mobile slide-down menu (outside .container) -->
-<nav class="menu menu__mobile">
-  <a href="#" class="menu__link-close icon icon--close"></a>
+<nav class="menu menu__mobile" aria-label="Mobile navigation">
+  <a href="#" class="menu__link-close icon icon--close" aria-label="Close menu"></a>
   <div class="menu__mobile-text">MENU</div>
   <div class="menu__mobile-content">
     {navLinks.map(link => (
@@ -59,7 +60,7 @@ const rightLinks = navLinks.slice(3);
       </div>
     </div> -->
 
-    <nav class="menu" id="menu">
+    <nav class="menu" id="menu" aria-label="Main navigation">
       <div class:list={['menu__inner', { 'menu__inner--green-color': greenMenu }]}>
 
         <div class="menu__container menu__container--left">
@@ -69,7 +70,7 @@ const rightLinks = navLinks.slice(3);
         </div>
 
         <div class="menu__container menu__container--center">
-          <a href={`/`} class="menu__logo--link">
+          <a href={`/`} class="menu__logo--link" aria-label="Bastion Tower — home">
             <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 260 44" style="enable-background:new 0 0 260 44;" xml:space="preserve">
               <path class="st0" d="M89.6,42.1c1.3,0,2.3-0.8,2.3-1.9c0-1.2-0.7-2-2.2-2h-2.4v3.9H89.6z M89.3,36.8c1.3,0,2.2-0.8,2.2-1.9
 		c0-1.1-0.8-1.9-2.2-1.9h-2v3.8L89.3,36.8L89.3,36.8z M89.5,31.5c2.3,0,3.7,1.4,3.7,3.3c0,1.3-0.8,2.2-1.8,2.6
@@ -116,7 +117,7 @@ const rightLinks = navLinks.slice(3);
 		c4.2,0,7.2-2.7,7.2-6.4C15.4,14.5,14.3,12.7,12.5,11.5" />
             </svg>
           </a>
-          <a href="#" class="menu__mobile-toggler icon icon--burguer"></a>
+          <a href="#" class="menu__mobile-toggler icon icon--burguer" aria-label="Open menu" aria-expanded="false"></a>
         </div>
 
         <div class="menu__container menu__container--right">

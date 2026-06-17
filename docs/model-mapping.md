@@ -31,19 +31,19 @@ across locale variants).
 
 ## Page single-types
 
-### Building  ← C# `<BuildingPage?>`
+### Building  ← C# `Building` (`old/Models/Building.cs`)
 Hero + meta fields on the type; `blocks` dynamic zone.
 
 | Strapi field | C# property | Type | Localised | Notes |
 |---|---|---|---|---|
-| `title` | | text (multiline) | L | hero title |
-| `hero` | | text | L | hero cover text |
-| `image` | | media | N | hero image |
-| `browser_title` | | text | L | → `<title>` |
-| `google_description` | | text | L | → meta description |
-| `footer_title` | | text | L | |
-| `slug` | | uid/text | L | translated per locale; drives routing |
-| `blocks` | | dynamic zone | — | allows: paragraph, paragraph-image, building, partners |
+| `title` | `Title` | text (multiline) | L | `[Text(Multiline = true, Localized = true)]` |
+| `hero` | `Hero` | text (multiline) | L | `[Text(Legend = "Titre Cover", Multiline = true, Localized = true)]` |
+| `image` | `Image` | media (single, images only) | N | `[Picture(Localized = false)]` |
+| `browser_title` | `BrowserTitle` | string | L | `[Text(Localized = true)]` |
+| `google_description` | `GoogleDescription` | text (multiline) | L | `[Text(Multiline = true, Localized = true)]` |
+| `footer_title` | _(none)_ | string | L | **Forced deviation** — absent from `Building.cs`; no C# origin. Included for operational consistency: all multi-block page single-types expose `footer_title` so editors have a uniform experience. Source of truth: issue #12. |
+| `slug` | | uid/text | L | translated per locale; drives routing — issue #24 |
+| `blocks` | | dynamic zone | — | allows: `blocks.paragraph`, `blocks.paragraph-image`, `blocks.building`, `blocks.partners` |
 
 _(repeat a block like this for: Accommodation, Services, Location, Home)_
 
