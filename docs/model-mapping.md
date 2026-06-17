@@ -70,10 +70,25 @@ rows below from CONTEXT.md; content-architect fills the field detail per issue.
 Full-width banner: title, cover text, image, optional video. _(field table TBD)_
 
 ### blocks.paragraph ← `PanelText`
-Title + HTML body + show/show_title/background_color. _(field table TBD)_
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `title` | `Title` | string | L | `[Text(Legend = "Titre", Localized = true)]` |
+| `text` | `Text` | CKEditor5 (`bastion` preset) | L | `[HTML(Localized = true)]` |
+| `show` | `Show` | boolean (default true) | L | `[Switch(Legend = "Show on website", Localized = true)]` |
+| `show_title` | `ShowTitle` | boolean (default true) | L | `[Switch(Legend = "Show Title", Localized = true)]` |
+| `background_color` | `BackgroundColor` | enumeration (White/Lightgray/Gray/Green, default White) | N | `[Enumeration(Localized = false)]`; forced deviation #1 (flattened inheritance) |
 
 ### blocks.paragraph-image ← `PanelTextImage`
-+ image. _(field table TBD)_
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `title` | `Title` | string | L | `[Text(Legend = "Panel Titre", Localized = true)]` |
+| `text` | `Text` | CKEditor5 (`bastion` preset) | L | `[HTML(Localized = true)]` |
+| `image` | `Image` | media (single) | N | `[Picture(Localized = false)]` → `PictureRef`; uploaded to Strapi media library |
+| `show` | `Show` | boolean (default true) | L | `[Switch(Legend = "Show on website", Localized = true)]` |
+| `show_title` | `ShowTitle` | boolean (default true) | L | `[Switch(Legend = "Show Title", Localized = true)]` |
+| `background_color` | `BackgroundColor` | enumeration (White/Lightgray/Gray/Green, default White) | N | `[Enumeration(Localized = false)]`; forced deviation #1 |
 
 ### blocks.building ← `PanelBuilding`
 Ordered items: big image, small image, title, HTML text. _(field table TBD)_
