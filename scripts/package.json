@@ -11,7 +11,9 @@
     "migrate:terms:local": "node --env-file=.env mongo-to-strapi.js",
     "migrate:terms:prod": "node --env-file=.env.production mongo-to-strapi.js",
     "migrate:contact:local": "node --env-file=.env migrate-contact.js",
-    "migrate:contact:prod": "node --env-file=.env.production migrate-contact.js"
+    "migrate:contact:prod": "node --env-file=.env.production migrate-contact.js",
+    "migrate:credits:local": "node --env-file=.env migrate-credits.js",
+    "migrate:credits:prod": "node --env-file=.env.production migrate-credits.js"
   },
   "dependencies": {
     "mongodb": "^3.7.0"
