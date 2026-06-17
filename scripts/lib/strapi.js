@@ -30,12 +30,15 @@ export function validateStrapiEnv() {
 
 /**
  * PUT data for a locale on a Strapi single-type.
- * Falls back to POST /localizations when the locale variant does not exist yet.
- * Note: a 404 on a mistyped singleType also reaches the fallback; the subsequent
- * POST will then fail with a more specific error.
+ * For the default locale (en): omits ?locale= so Strapi v5 treats it as an upsert.
+ * Passing ?locale=en on a brand-new single-type triggers update semantics and returns 405.
+ * Falls back to POST /localizations when a non-default locale variant does not exist yet.
  */
 export async function putLocale(singleType, locale, data) {
-  const url = `${strapiUrl()}/api/${singleType}?locale=${locale}`;
+  const url = locale === 'en'
+    ? `${strapiUrl()}/api/${singleType}`
+    : `${strapiUrl()}/api/${singleType}?locale=${locale}`;
+
   const res = await fetch(url, {
     method: 'PUT',
     headers: authHeaders(),
@@ -48,7 +51,7 @@ export async function putLocale(singleType, locale, data) {
     }
     const body = await res.text();
     throw new Error(
-      `Strapi PUT /${singleType}?locale=${locale} failed (${res.status}):\n${body}`
+      `Strapi PUT /${singleType}${locale !== 'en' ? `?locale=${locale}` : ''} failed (${res.status}):\n${body}`
     );
   }
 

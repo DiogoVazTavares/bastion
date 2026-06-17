@@ -1,9 +1,9 @@
 ---
-import type { GetStaticPaths } from 'astro';
+import type { GetStaticPaths, InferGetStaticPropsType } from 'astro';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { fetchTerms } from '../../lib/strapi';
 
-export const getStaticPaths: GetStaticPaths = async () => {
+export const getStaticPaths = (async () => {
   const locales = ['en', 'fr', 'nl'];
 
   const pages = await Promise.all(
@@ -14,14 +14,16 @@ export const getStaticPaths: GetStaticPaths = async () => {
   );
 
   return pages;
-};
+}) satisfies GetStaticPaths;
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
 
 const { terms, locale } = Astro.props;
 
 const bgClass: Record<string, string> = {
   Lightgray: 'section--bg-light-gray',
   Gray: 'section--bg-gray',
-  Green: 'section--bg-green',
+  Blue: 'section--bg-green',
 };
 const sectionClass = ['section', bgClass[terms.background_color]].filter(Boolean).join(' ');
 ---

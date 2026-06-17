@@ -1,0 +1,33 @@
+{
+  "collectionName": "components_blocks_buildings",
+  "info": {
+    "displayName": "Building",
+    "icon": "apps",
+    "description": "PanelBuilding — ordered building items, each with big image, small image, title, HTML text"
+  },
+  "options": {},
+  "attributes": {
+    "show": {
+      "type": "boolean",
+      "default": true,
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "show_title": {
+      "type": "boolean",
+      "default": true,
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "background_color": {
+      "type": "enumeration",
+      "enum": ["White", "Lightgray", "Gray", "Blue"],
+      "default": "White",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "items": {
+      "type": "component",
+      "repeatable": true,
+      "component": "blocks.building-item",
+      "pluginOptions": { "i18n": { "localized": true } }
+    }
+  }
+}

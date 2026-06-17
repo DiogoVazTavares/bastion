@@ -1,0 +1,56 @@
+{
+  "kind": "singleType",
+  "collectionName": "building",
+  "info": {
+    "singularName": "building",
+    "pluralName": "buildings",
+    "displayName": "Building",
+    "description": ""
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "title": {
+      "type": "text",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "hero": {
+      "type": "text",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"],
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "browser_title": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "google_description": {
+      "type": "text",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "footer_title": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "blocks": {
+      "type": "dynamiczone",
+      "components": [
+        "blocks.paragraph",
+        "blocks.paragraph-image",
+        "blocks.building",
+        "blocks.partners"
+      ]
+    }
+  }
+}

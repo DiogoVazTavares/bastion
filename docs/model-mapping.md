@@ -20,25 +20,30 @@ across locale variants).
    mixed-type ordering.
 3. **Polymorphic service checkers.** C# subtypes (image-checker/icon-checker) → repeatable
    `service-checker` component with `kind: image | icon` + union of fields.
-4. _(add: nesting-depth limits, type coercions, naming changes, CKE5/HTML handling, …)_
+4. **`BackgroundColor.Green` renamed to `Blue` in Strapi enum.** The C# enum value is named `Green`
+   but its `[Description("Blue")]` attribute showed "Blue" in the old CMS UI, and `@color-primary`
+   (`#153d86`) is navy blue — the class was always misnamed. Strapi enum uses `"Blue"` to match
+   what editors see. The CSS class `section--bg-green` is kept for now and mapped at runtime;
+   tracked for rename in `docs/site-wide-issues.md` (SW-4).
+5. _(add: nesting-depth limits, type coercions, naming changes, CKE5/HTML handling, …)_
 
 ---
 
 ## Page single-types
 
-### Building  ← C# `<BuildingPage?>`
+### Building  ← C# `Building` (`old/Models/Building.cs`)
 Hero + meta fields on the type; `blocks` dynamic zone.
 
 | Strapi field | C# property | Type | Localised | Notes |
 |---|---|---|---|---|
-| `title` | | text (multiline) | L | hero title |
-| `hero` | | text | L | hero cover text |
-| `image` | | media | N | hero image |
-| `browser_title` | | text | L | → `<title>` |
-| `google_description` | | text | L | → meta description |
-| `footer_title` | | text | L | |
-| `slug` | | uid/text | L | translated per locale; drives routing |
-| `blocks` | | dynamic zone | — | allows: paragraph, paragraph-image, building, partners |
+| `title` | `Title` | text (multiline) | L | `[Text(Multiline = true, Localized = true)]` |
+| `hero` | `Hero` | text (multiline) | L | `[Text(Legend = "Titre Cover", Multiline = true, Localized = true)]` |
+| `image` | `Image` | media (single, images only) | N | `[Picture(Localized = false)]` |
+| `browser_title` | `BrowserTitle` | string | L | `[Text(Localized = true)]` |
+| `google_description` | `GoogleDescription` | text (multiline) | L | `[Text(Multiline = true, Localized = true)]` |
+| `footer_title` | _(none)_ | string | L | **Forced deviation** — absent from `Building.cs`; no C# origin. Included for operational consistency: all multi-block page single-types expose `footer_title` so editors have a uniform experience. Source of truth: issue #12. |
+| `slug` | | uid/text | L | translated per locale; drives routing — issue #24 |
+| `blocks` | | dynamic zone | — | allows: `blocks.paragraph`, `blocks.paragraph-image`, `blocks.building`, `blocks.partners` |
 
 _(repeat a block like this for: Accommodation, Services, Location, Home)_
 
@@ -57,7 +62,19 @@ every page — **not a standalone page**. No hero, no SEO meta, no show/backgrou
 a layout section, not a page; SEO meta fields are not applicable.
 
 ### Terms / Credits (flat — no dynamic zone)
-_(fill in)_
+
+Both `terms` and `credits` are Strapi single-types with identical field shapes. `Credits` extends `PanelText` in C# (via inheritance); fields are flattened per forced deviation #1.
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `title` | `Title` | string | L | inherited from `PanelText` |
+| `text` | `Text` | CKEditor5 (`bastion` preset) | L | inherited from `PanelText` |
+| `show` | `Show` | boolean (default true) | L | inherited from `PanelText` |
+| `show_title` | `ShowTitle` | boolean (default true) | L | inherited from `PanelText` |
+| `background_color` | `BackgroundColor` | enumeration (White/Lightgray/Gray/Green, default White) | N | inherited from `PanelText`; forced deviation #1 |
+| `footer_title` | `FooterTitle` | string | L | `[Text(Legend = "Footer title", Localized = true)]` |
+| `browser_title` | `BrowserTitle` | string | L | `[Text(Legend = "Titre du navigateur", Localized = true)]` |
+| `google_description` | `GoogleDescription` | text (multiline) | L | `[Text(Multiline = true, Localized = true)]` |
 
 ---
 
@@ -91,10 +108,33 @@ Full-width banner: title, cover text, image, optional video. _(field table TBD)_
 | `background_color` | `BackgroundColor` | enumeration (White/Lightgray/Gray/Green, default White) | N | `[Enumeration(Localized = false)]`; forced deviation #1 |
 
 ### blocks.building ← `PanelBuilding`
-Ordered items: big image, small image, title, HTML text. _(field table TBD)_
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `show` | `Show` | boolean (default true) | L | `[Switch(Legend = "Show on website", Localized = true)]`; forced deviation #1 |
+| `show_title` | `ShowTitle` | boolean (default true) | L | `[Switch(Legend = "Show Title", Localized = true)]`; forced deviation #1 |
+| `background_color` | `BackgroundColor` | enumeration (White/Lightgray/Gray/Green, default White) | N | `[Enumeration(Localized = false)]`; forced deviation #1 |
+| `items` | (children via `Model.Fluent.Leaves<IBuildingItemBlock>()`) | repeatable component (`blocks.building-item`) | L (wrapper localised) | items array |
+
+#### blocks.building-item ← `PanelBuilding.Item`
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `big_image` | `BigImage` | media (single) | N | `[Picture(Legend = "Big Image", Localized = false)]`; uploaded to media library |
+| `small_image` | `SmallImage` | media (single) | N | `[Picture(Legend = "Small Image", Localized = false)]`; uploaded to media library |
+| `title` | `Title` | string | L | `[Text(Legend = "Title", Localized = true)]` |
+| `text` | `Text` | CKEditor5 (`bastion` preset) | L | `[HTML(Legend = "Texte", Localized = true)]` |
 
 ### blocks.partners ← `PanelPartners`
-Title + HTML text + image array. _(field table TBD)_
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `title` | `Title` | string | L | `[Text(Legend = "Titre", Localized = true)]` |
+| `text` | `Text` | CKEditor5 (`bastion` preset) | L | `[HTML(Legend = "Texte", Localized = true)]` |
+| `images` | `Images` | media (multiple) | N | `[Pictures(Legend = "Images", Localized = false)]`; all uploaded to media library |
+| `show` | `Show` | boolean (default true) | L | `[Switch(Legend = "Show on website", Localized = true)]`; forced deviation #1 |
+| `show_title` | `ShowTitle` | boolean (default true) | L | `[Switch(Legend = "Show Title", Localized = true)]`; forced deviation #1 |
+| `background_color` | `BackgroundColor` | enumeration (White/Lightgray/Gray/Green, default White) | N | `[Enumeration(Localized = false)]`; forced deviation #1 |
 
 ### blocks.slider ← `PanelSlider`
 Title + `slider-slide[]` (kind enum, deviation #2). _(field table TBD)_

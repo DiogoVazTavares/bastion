@@ -8,9 +8,10 @@ interface Props {
   description?: string;
   locale?: string;
   greenMenu?: boolean;
+  currentSlug?: string;
 }
 
-const { title = 'Bastion Tower', description, locale = 'en', greenMenu = false } = Astro.props;
+const { title = 'Bastion Tower', description, locale = 'en', greenMenu = false, currentSlug } = Astro.props;
 
 const [contact, terms, credits] = await Promise.all([
   fetchContact(locale),
@@ -32,7 +33,7 @@ const [contact, terms, credits] = await Promise.all([
   </head>
   <body>
     <div class="container">
-      <SiteHeader locale={locale} greenMenu={greenMenu} />
+      <SiteHeader locale={locale} greenMenu={greenMenu} currentSlug={currentSlug} />
       <slot />
       <section class="section section--bg-green">
         <div class="contact section__inner" id="contact">
@@ -41,7 +42,7 @@ const [contact, terms, credits] = await Promise.all([
           </h1>
           <div class="contact__text">
             <Fragment set:html={contact.text ?? ''} />
-            <a href="javascript:void(9)" class="icon icon--arrow-circle-top contact__button contact__button--rouded" data-behavior="scroll-to-top"></a>
+            <a href="javascript:void(9)" class="icon icon--arrow-circle-top contact__button contact__button--rouded" data-behavior="scroll-to-top" aria-label="Scroll to top"></a>
           </div>
         </div>
       </section>

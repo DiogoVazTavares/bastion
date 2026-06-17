@@ -77,6 +77,9 @@ client PII, ever go in memory, prompts, issue comments, or PRs.**
   `validateEnv()`.
 - **Old CMS is the source of truth until cutover.** Don't edit content in Strapi except to
   test; the full ETL re-runs shortly before DNS cutover.
+- **npm scripts**: every `migrate-<page>.js` script must have matching entries in
+  `scripts/package.json` — `"migrate:<page>:local"` and `"migrate:<page>:prod"` — following
+  the existing `contact`/`credits` pattern.
 
 ## Rich text / CKE5
 

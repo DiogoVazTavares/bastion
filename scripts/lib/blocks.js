@@ -1,5 +1,5 @@
 // C# enum BackgroundColor is stored as an integer index by MongoDB.Driver
-const BG_COLOR_BY_INDEX = { 0: 'White', 1: 'Lightgray', 2: 'Gray', 3: 'Green' };
+const BG_COLOR_BY_INDEX = { 0: 'White', 1: 'Lightgray', 2: 'Gray', 3: 'Blue' };
 
 export function mapBackgroundColor(raw) {
   if (typeof raw === 'string') return raw;
@@ -22,6 +22,32 @@ export function mapParagraphImage(doc, imageId) {
     title:            doc.Title     ?? null,
     text:             doc.Text      ?? null,
     image:            imageId       ?? null,
+    show:             doc.Show      ?? true,
+    show_title:       doc.ShowTitle ?? true,
+    background_color: mapBackgroundColor(doc.BackgroundColor),
+  };
+}
+
+export function mapBuilding(doc, itemImageIds) {
+  const items = (doc.Items ?? []).map((item, i) => ({
+    big_image:   itemImageIds?.[i]?.bigImageId   ?? null,
+    small_image: itemImageIds?.[i]?.smallImageId ?? null,
+    title:       item.Title ?? null,
+    text:        item.Text  ?? null,
+  }));
+  return {
+    show:             doc.Show      ?? true,
+    show_title:       doc.ShowTitle ?? true,
+    background_color: mapBackgroundColor(doc.BackgroundColor),
+    items,
+  };
+}
+
+export function mapPartners(doc, imageIds) {
+  return {
+    title:            doc.Title     ?? null,
+    text:             doc.Text      ?? null,
+    images:           imageIds      ?? [],
     show:             doc.Show      ?? true,
     show_title:       doc.ShowTitle ?? true,
     background_color: mapBackgroundColor(doc.BackgroundColor),

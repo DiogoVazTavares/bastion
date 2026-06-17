@@ -1,0 +1,35 @@
+{
+  "collectionName": "components_blocks_building_items",
+  "info": {
+    "displayName": "Building Item",
+    "icon": "cube",
+    "description": "PanelBuilding.Item — big image, small image, title, HTML text"
+  },
+  "options": {},
+  "attributes": {
+    "big_image": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"],
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "small_image": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"],
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "title": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "text": {
+      "type": "customField",
+      "customField": "plugin::ckeditor5.CKEditor",
+      "options": { "preset": "bastion" },
+      "pluginOptions": { "i18n": { "localized": true } }
+    }
+  }
+}

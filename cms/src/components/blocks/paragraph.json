@@ -9,51 +9,29 @@
   "attributes": {
     "title": {
       "type": "string",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      }
+      "pluginOptions": { "i18n": { "localized": true } }
     },
     "text": {
       "type": "customField",
       "customField": "plugin::ckeditor5.CKEditor",
-      "options": {
-        "preset": "bastion"
-      },
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      }
+      "options": { "preset": "bastion" },
+      "pluginOptions": { "i18n": { "localized": true } }
     },
     "show": {
       "type": "boolean",
       "default": true,
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      }
+      "pluginOptions": { "i18n": { "localized": true } }
     },
     "show_title": {
       "type": "boolean",
       "default": true,
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      }
+      "pluginOptions": { "i18n": { "localized": true } }
     },
     "background_color": {
       "type": "enumeration",
-      "enum": ["White", "Lightgray", "Gray", "Green"],
+      "enum": ["White", "Lightgray", "Gray", "Blue"],
       "default": "White",
-      "pluginOptions": {
-        "i18n": {
-          "localized": false
-        }
-      }
+      "pluginOptions": { "i18n": { "localized": false } }
     }
   }
 }
