@@ -1,0 +1,59 @@
+{
+  "collectionName": "components_blocks_paragraphs",
+  "info": {
+    "displayName": "Paragraph",
+    "icon": "align-left",
+    "description": "PanelText — title, HTML body, show/show_title/background_color"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "text": {
+      "type": "customField",
+      "customField": "plugin::ckeditor5.CKEditor",
+      "options": {
+        "preset": "bastion"
+      },
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "show": {
+      "type": "boolean",
+      "default": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "show_title": {
+      "type": "boolean",
+      "default": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "background_color": {
+      "type": "enumeration",
+      "enum": ["White", "Lightgray", "Gray", "Green"],
+      "default": "White",
+      "pluginOptions": {
+        "i18n": {
+          "localized": false
+        }
+      }
+    }
+  }
+}

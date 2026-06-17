@@ -7,6 +7,27 @@ export function mapBackgroundColor(raw) {
   return 'White';
 }
 
+export function mapParagraph(doc) {
+  return {
+    title:            doc.Title     ?? null,
+    text:             doc.Text      ?? null,
+    show:             doc.Show      ?? true,
+    show_title:       doc.ShowTitle ?? true,
+    background_color: mapBackgroundColor(doc.BackgroundColor),
+  };
+}
+
+export function mapParagraphImage(doc, imageId) {
+  return {
+    title:            doc.Title     ?? null,
+    text:             doc.Text      ?? null,
+    image:            imageId       ?? null,
+    show:             doc.Show      ?? true,
+    show_title:       doc.ShowTitle ?? true,
+    background_color: mapBackgroundColor(doc.BackgroundColor),
+  };
+}
+
 /**
  * Returns new payloads with non-localised fields copied from the 'en' payload to all locales.
  * Does not mutate the input.
