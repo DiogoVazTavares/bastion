@@ -96,10 +96,12 @@ function pic(ref) {
   return ref.Id != null ? ref : { ...ref, Id: ref._id };
 }
 
-// C# arrays may deserialise as {"0": x, "1": x} objects rather than BSON arrays.
+// ourCompany.cms serialises typed arrays as { _t: "TypeName", _v: [...] }.
+// Plain BSON arrays are returned as JS arrays; fallback covers ordered-key objects.
 function toArray(val) {
   if (!val) return [];
   if (Array.isArray(val)) return val;
+  if (Array.isArray(val._v)) return val._v;
   return Object.values(val);
 }
 
