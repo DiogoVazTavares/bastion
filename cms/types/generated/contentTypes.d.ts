@@ -599,7 +599,7 @@ export interface ApiTermsTerms extends Struct.SingleTypeSchema {
   };
   attributes: {
     background_color: Schema.Attribute.Enumeration<
-      ['White', 'Lightgray', 'Gray', 'Green']
+      ['White', 'Lightgray', 'Gray', 'Blue']
     > &
       Schema.Attribute.SetPluginOptions<{
         i18n: {

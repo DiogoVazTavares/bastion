@@ -6,12 +6,12 @@ test('mapBackgroundColor maps integer index to string', () => {
   assert.equal(mapBackgroundColor(0), 'White');
   assert.equal(mapBackgroundColor(1), 'Lightgray');
   assert.equal(mapBackgroundColor(2), 'Gray');
-  assert.equal(mapBackgroundColor(3), 'Green');
+  assert.equal(mapBackgroundColor(3), 'Blue');
 });
 
 test('mapBackgroundColor passes through string value unchanged', () => {
   assert.equal(mapBackgroundColor('Gray'), 'Gray');
-  assert.equal(mapBackgroundColor('Green'), 'Green');
+  assert.equal(mapBackgroundColor('Blue'), 'Blue');
 });
 
 test('mapBackgroundColor falls back to White for unknown values', () => {
@@ -93,9 +93,9 @@ test('mapParagraph BackgroundColor integer 0 maps to White', () => {
   assert.equal(result.background_color, 'White');
 });
 
-test('mapParagraph BackgroundColor string Green passes through', () => {
-  const result = mapParagraph({ BackgroundColor: 'Green' });
-  assert.equal(result.background_color, 'Green');
+test('mapParagraph BackgroundColor string Blue passes through', () => {
+  const result = mapParagraph({ BackgroundColor: 'Blue' });
+  assert.equal(result.background_color, 'Blue');
 });
 
 // mapParagraphImage
@@ -108,7 +108,7 @@ test('mapParagraphImage maps all fields including imageId', () => {
   assert.equal(result.image, 42);
   assert.equal(result.show, true);
   assert.equal(result.show_title, false);
-  assert.equal(result.background_color, 'Green');
+  assert.equal(result.background_color, 'Blue');
 });
 
 test('mapParagraphImage imageId null yields image: null', () => {

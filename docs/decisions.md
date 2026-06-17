@@ -39,6 +39,28 @@ Resolves the ADR 0003 open decision on the media domain (`CDN_URL` / provider `b
   (empty) manifest**. The self-healing `verify` step tolerates a stale manifest (every hit
   misses → re-upload), but starting clean avoids a confusing first run.
 
+## 2026-06-17 — Strapi schema changes: clean rebuild when the admin won't update
+
+After editing a schema JSON (e.g. an `enumeration`'s `enum` list), the Strapi admin can keep
+showing the **old options** even after a server restart, a browser hard-refresh, and incognito.
+The backend is correct (`src/`, compiled `dist/`, and the live `strapi_core_store_settings`
+all agree) — the staleness lives in the compiled output / Vite admin caches and the admin's
+**browser-side** schema cache.
+
+Reliable reset for a TypeScript Strapi project:
+
+1. Stop the dev server; confirm port 1337 is free.
+2. `npm run clean` — removes `dist/`, `.strapi/`, `node_modules/.strapi`, `.cache`, `.vite`
+   (all regenerated on next boot).
+3. `npm run develop` (or `npm run dev:clean`, which chains both).
+4. In the browser: DevTools → Application → **Clear site data** for `localhost:1337`, then
+   close all admin tabs and reopen. A plain hard-refresh does **not** clear the admin's
+   IndexedDB schema cache.
+
+Verify the live enum without the admin UI by reading the internal store:
+`sqlite3 cms/.tmp/data.db "SELECT value FROM strapi_core_store_settings WHERE key='strapi_content_types_schema';"`
+(Strapi rewrites this from the in-memory schema on every boot.)
+
 ## 2026-06-11 — Backup Worker needs a directory owner
 
 The content-backup Cron Worker (ADR 0004) fits none of the existing agent directories

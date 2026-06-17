@@ -23,7 +23,7 @@ const { terms, locale } = Astro.props;
 const bgClass: Record<string, string> = {
   Lightgray: 'section--bg-light-gray',
   Gray: 'section--bg-gray',
-  Green: 'section--bg-green',
+  Blue: 'section--bg-green',
 };
 const sectionClass = ['section', bgClass[terms.background_color]].filter(Boolean).join(' ');
 ---

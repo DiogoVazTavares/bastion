@@ -1,5 +1,5 @@
 // C# enum BackgroundColor is stored as an integer index by MongoDB.Driver
-const BG_COLOR_BY_INDEX = { 0: 'White', 1: 'Lightgray', 2: 'Gray', 3: 'Green' };
+const BG_COLOR_BY_INDEX = { 0: 'White', 1: 'Lightgray', 2: 'Gray', 3: 'Blue' };
 
 export function mapBackgroundColor(raw) {
   if (typeof raw === 'string') return raw;

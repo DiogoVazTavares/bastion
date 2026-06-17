@@ -20,7 +20,12 @@ across locale variants).
    mixed-type ordering.
 3. **Polymorphic service checkers.** C# subtypes (image-checker/icon-checker) → repeatable
    `service-checker` component with `kind: image | icon` + union of fields.
-4. _(add: nesting-depth limits, type coercions, naming changes, CKE5/HTML handling, …)_
+4. **`BackgroundColor.Green` renamed to `Blue` in Strapi enum.** The C# enum value is named `Green`
+   but its `[Description("Blue")]` attribute showed "Blue" in the old CMS UI, and `@color-primary`
+   (`#153d86`) is navy blue — the class was always misnamed. Strapi enum uses `"Blue"` to match
+   what editors see. The CSS class `section--bg-green` is kept for now and mapped at runtime;
+   tracked for rename in `docs/site-wide-issues.md` (SW-4).
+5. _(add: nesting-depth limits, type coercions, naming changes, CKE5/HTML handling, …)_
 
 ---
 

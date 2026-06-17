@@ -9,6 +9,8 @@
     "deploy": "strapi deploy",
     "dev": "strapi develop",
     "develop": "strapi develop",
+    "clean": "rm -rf dist .strapi node_modules/.strapi node_modules/.cache node_modules/.vite",
+    "dev:clean": "npm run clean && strapi develop",
     "start": "strapi start",
     "strapi": "strapi",
     "upgrade": "npx @strapi/upgrade latest",
