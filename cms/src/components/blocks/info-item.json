@@ -1,0 +1,24 @@
+{
+  "collectionName": "components_blocks_info_items",
+  "info": {
+    "displayName": "Info Item",
+    "icon": "layer",
+    "description": "PanelInfo.PanelInfoItem — single info column: image (not localised) + HTML text (localised)"
+  },
+  "options": {},
+  "attributes": {
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"],
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "text": {
+      "type": "customField",
+      "customField": "plugin::ckeditor5.CKEditor",
+      "options": { "preset": "bastion" },
+      "pluginOptions": { "i18n": { "localized": true } }
+    }
+  }
+}

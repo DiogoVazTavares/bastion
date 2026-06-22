@@ -85,3 +85,15 @@ They are catalogued here so the auditor never re-raises them.
 - Issue: `stopOnInteract=true` stops the interval after a user-initiated slide change, but there is no hover-pause, focus-pause, or explicit pause button. WCAG 2.2.2 requires a pause/stop/hide mechanism for auto-advancing content.
 - WCAG: 2.2.2 (A)
 - Status: pre-existing on old site — old `Slider.ts` has identical logic, no hover/focus pause. T3, out of scope this phase. See T2-SL-006 for the Tier 2 queue item.
+
+## T3-013 — Info block column row has no list semantics
+- File: `old/Views/Shared/Blocks/_Info.cshtml` lines 9–20 / `web/src/components/blocks/Info.astro` lines 33–45
+- Issue: The `.info__inner` row of `.info__item` columns is a plain `<div>` group; items are not marked up as a list. For purely visual column layouts this is a common, accepted pattern; however it means columns have no semantic grouping announcement for screen readers.
+- WCAG: 1.3.1 (A) — borderline; only a concern if columns are semantically equivalent list-like items
+- Status: Identical pattern in old `_Info.cshtml`. T3, out of scope this phase.
+
+## T3-014 — Info block section outer uses `<div>` not `<article>` or `<section>`
+- File: `old/Views/Shared/Blocks/_Section.cshtml` line 22 uses `<article>` / `web/src/components/blocks/Info.astro` line 28 uses `<div>`
+- Issue: Old site rendered the outer block wrapper as `<article class="section">`. Rebuild uses `<div class="section">`. Loss of landmark semantics (minor — `<article>` as block wrapper is unusual and not a strong landmark).
+- WCAG: 1.3.1 (A) — minor
+- Status: The difference is in the outer wrapper, not the Info block itself. The old `_Info.cshtml` did not own that wrapper; `_Section.cshtml` did. This is a cross-cutting pattern across all rebuilt blocks (Paragraph, Slider, etc. all use `<div>`). T3-level: not unique to Info, pre-existing architectural choice across rebuild. Out of scope this phase.
