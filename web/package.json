@@ -17,10 +17,12 @@
     "check": "astro check && eslint . && prettier --check ."
   },
   "dependencies": {
-    "astro": "^6.4.6"
+    "astro": "^6.4.6",
+    "hammerjs": "^2.0.8"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
+    "@types/hammerjs": "^2.0.46",
     "eslint": "^10.5.0",
     "eslint-plugin-astro": "^1.7.0",
     "less": "^4.6.4",

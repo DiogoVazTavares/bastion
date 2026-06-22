@@ -1,0 +1,108 @@
+---
+interface SlideImage {
+  __component: "blocks.slide-image";
+  image: {
+    url: string;
+    alternativeText: string | null;
+    caption: string | null;
+  } | null;
+}
+interface SlideText {
+  __component: "blocks.slide-text";
+  text: string | null;
+}
+interface Props {
+  title: string | null;
+  show: boolean;
+  show_title: boolean;
+  background_color: "White" | "Lightgray" | "Gray" | "Blue";
+  slides: (SlideImage | SlideText)[];
+}
+
+const { title, show, show_title, background_color, slides } = Astro.props;
+
+const bgClass: Record<string, string> = {
+  Lightgray: "section--bg-light-gray",
+  Gray: "section--bg-gray",
+  Blue: "section--bg-green",
+};
+
+const sectionClass = ["section", bgClass[background_color]]
+  .filter(Boolean)
+  .join(" ");
+---
+
+{
+  show && (
+    <div class={sectionClass} data-spy-enter-viewport>
+      <div class="section__inner">
+        {show_title && title && <h4 class="section__title">{title}</h4>}
+        <div class="slider" data-behavior="slider" data-slider-delay="4000">
+          <div class="slider__inner">
+            <div class="slider__slides" data-behavior="slider-slides">
+              {slides.map((slide) =>
+                slide.__component === "blocks.slide-image" && slide.image ? (
+                  <figure
+                    class="slider__slide slider__slide--image"
+                    data-behavior="slider-slide"
+                  >
+                    <div class="slider__figure">
+                      <img
+                        class="slider__slide-image"
+                        srcset={`${slide.image.url}?w=450 450w, ${slide.image.url}?w=600 600w, ${slide.image.url}?w=900 900w, ${slide.image.url}?w=1200 1200w, ${slide.image.url}?w=1500 1500w, ${slide.image.url}?w=2000 2000w`}
+                        sizes="calc(100vw - 100px)"
+                        src={slide.image.url}
+                        alt={slide.image.alternativeText ?? ""}
+                      />
+                    </div>
+                    {slide.image.caption && (
+                      <figcaption class="slider__slide-figcaption">
+                        {slide.image.caption}
+                      </figcaption>
+                    )}
+                  </figure>
+                ) : slide.__component === "blocks.slide-text" && slide.text ? (
+                  <div
+                    class="slider__slide slider__slide--text"
+                    data-behavior="slider-slide"
+                  >
+                    <div class="slider__slide-text-inner">
+                      <Fragment set:html={slide.text} />
+                    </div>
+                  </div>
+                ) : null,
+              )}
+            </div>
+
+            {slides.length > 1 && (
+              <>
+                <a
+                  class="icon icon--arrow-circle-left slider__control slider__control--previous"
+                  data-behavior="slider-previous"
+                />
+                <a
+                  class="icon icon--arrow-circle-right slider__control slider__control--next"
+                  data-behavior="slider-next"
+                />
+                <nav class="slider__nav" aria-label="Slide navigation">
+                  {slides.map((_, i) => (
+                    <a
+                      class="slider__nav-item"
+                      data-behavior="slider-nav-item"
+                      data-index={i}
+                    />
+                  ))}
+                </nav>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+<script>
+  import { Discover } from "../../scripts/Slider";
+  Discover();
+</script>
