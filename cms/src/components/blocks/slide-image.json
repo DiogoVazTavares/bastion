@@ -1,0 +1,18 @@
+{
+  "collectionName": "components_blocks_slide_images",
+  "info": {
+    "displayName": "Slide Image",
+    "icon": "picture",
+    "description": "PanelSlider.SlideImage — single image slide"
+  },
+  "options": {},
+  "attributes": {
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"],
+      "pluginOptions": { "i18n": { "localized": false } }
+    }
+  }
+}

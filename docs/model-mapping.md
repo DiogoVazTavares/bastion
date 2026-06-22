@@ -15,8 +15,14 @@ across locale variants).
 1. **Flattened inheritance.** Strapi components do not inherit. Shared C# base-class fields
    (e.g. `show`, `show_title`, `background_color`) are copied into every component that had
    them. Logged once here as a pattern; not repeated per block.
-2. **Polymorphic slider slides.** C# `List<SlideBase>` (image/text) → repeatable
-   `slider-slide` component with `kind: image | text` + union of fields. Preserves
+2. **Polymorphic slider slides — dynamic zone (revised 2026-06-22).** C# `PanelSlider`
+   holds a `List<ISlide>` where `SlideImage` and `SlideText` are the only two leaf types.
+   The two subtypes have genuinely disjoint field shapes (`image` vs HTML `text`), so a
+   dynamic zone of `blocks.slide-image` and `blocks.slide-text` is the natural 1:1 mapping
+   of the C# polymorphism — each slide type is its own component, ordered freely in the
+   zone. The earlier plan (a single `slider-slide` repeatable with a `kind` enum and a
+   union of fields) would have forced a merged schema with one field always null; a dynamic
+   zone avoids that and matches the C# inheritance structure more closely. Preserves
    mixed-type ordering.
 3. **Polymorphic service checkers.** C# subtypes (image-checker/icon-checker) → repeatable
    `service-checker` component with `kind: image | icon` + union of fields.
@@ -154,7 +160,26 @@ Full-width banner: title, cover text, image, optional video. _(field table TBD)_
 | `background_color` | `BackgroundColor` | enumeration (White/Lightgray/Gray/Green, default White) | N | `[Enumeration(Localized = false)]`; forced deviation #1 |
 
 ### blocks.slider ← `PanelSlider`
-Title + `slider-slide[]` (kind enum, deviation #2). _(field table TBD)_
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `title` | `Title` | string | L | `[Text(Legend = "Titre", Localized = true)]` |
+| `show` | `Show` | boolean (default true) | L | `[Switch(Legend = "Show on website", Localized = true)]`; forced deviation #1 |
+| `show_title` | `ShowTitle` | boolean (default true) | L | `[Switch(Legend = "Show Title", Localized = true)]`; forced deviation #1 |
+| `background_color` | `BackgroundColor` | enumeration (White/Lightgray/Gray/Blue, default White) | N | `[Enumeration(Localized = false)]`; forced deviation #4 (C# name is `Green`; Strapi uses `Blue` — see deviation #4) |
+| `slides` | _(dynamic: `SlideImage` \| `SlideText` leaf types of `ISlide`)_ | dynamic zone (`blocks.slide-image`, `blocks.slide-text`) | L | forced deviation #2 (dynamic zone replaces kind-enum plan — see above) |
+
+#### blocks.slide-image ← `PanelSlider.SlideImage`
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `image` | `Image` | media (single, images only) | N | `[Picture(Legend = "Image", Localized = false)]` → `PictureRef` |
+
+#### blocks.slide-text ← `PanelSlider.SlideText`
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `text` | `Text` | CKEditor5 (`bastion` preset) | L | `[HTML(Legend = "Text", Localized = true)]` |
 
 ### blocks.info ← `PanelInfo`
 Title + columns (image + HTML text). _(field table TBD)_

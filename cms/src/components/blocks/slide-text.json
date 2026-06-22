@@ -1,0 +1,17 @@
+{
+  "collectionName": "components_blocks_slide_texts",
+  "info": {
+    "displayName": "Slide Text",
+    "icon": "file-alt",
+    "description": "PanelSlider.SlideText — HTML text slide"
+  },
+  "options": {},
+  "attributes": {
+    "text": {
+      "type": "customField",
+      "customField": "plugin::ckeditor5.CKEditor",
+      "options": { "preset": "bastion" },
+      "pluginOptions": { "i18n": { "localized": true } }
+    }
+  }
+}

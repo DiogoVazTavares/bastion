@@ -61,3 +61,27 @@ They are catalogued here so the auditor never re-raises them.
 - Issue: Old markup had `alt="Alternate Text"` — meaningless placeholder.
 - WCAG: 1.1.1 (A)
 - Status: Rebuild IMPROVES on this (uses Strapi `alternativeText`, falls back to empty string for decorative). Not a regression — see T1 note in issue 12 findings.
+
+## T3-009 — Slider prev/next controls are `<a>` without `href` (not keyboard focusable)
+- File: `old/Views/Shared/Blocks/_Slider.cshtml` lines 51–54 / `web/src/components/blocks/Slider.astro` lines 73–80
+- Issue: `<a class="icon icon--arrow-circle-left slider__control slider__control--previous">` and matching `--next` have no `href`, no `role`, no `tabindex`. They are not in the tab order and are not operable by keyboard.
+- WCAG: 2.1.1 (A)
+- Status: pre-existing on old site — exact same markup in `_Slider.cshtml` lines 51–54. T3, out of scope this phase. See T2-SL-003 for the Tier 2 queue item.
+
+## T3-010 — Slider nav-dot items are `<a>` without `href` (not keyboard focusable)
+- File: `old/Views/Shared/Blocks/_Slider.cshtml` lines 55–60 / `web/src/components/blocks/Slider.astro` lines 82–89
+- Issue: `<a class="slider__nav-item">` dots have no `href`, no `role`, no `tabindex`, no label. Not focusable, no accessible name.
+- WCAG: 2.1.1 / 4.1.2 (A / AA)
+- Status: pre-existing on old site — exact same pattern. T3, out of scope this phase. See T2-SL-004 for the Tier 2 queue item.
+
+## T3-011 — Slider has no `role="region"` / `aria-label` landmark and no live region for slide changes
+- File: `old/Views/Shared/Blocks/_Slider.cshtml` / `web/src/components/blocks/Slider.astro`
+- Issue: The slider has no landmark region and no `aria-live` region; screen readers receive no announcement when slides advance automatically.
+- WCAG: 4.1.3 (AA)
+- Status: pre-existing on old site — T3, out of scope this phase. See T2-SL-005 for the Tier 2 queue item.
+
+## T3-012 — Autoplay has no pause mechanism
+- File: `old/Scripts/Slider.ts` / `web/src/scripts/Slider.ts`
+- Issue: `stopOnInteract=true` stops the interval after a user-initiated slide change, but there is no hover-pause, focus-pause, or explicit pause button. WCAG 2.2.2 requires a pause/stop/hide mechanism for auto-advancing content.
+- WCAG: 2.2.2 (A)
+- Status: pre-existing on old site — old `Slider.ts` has identical logic, no hover/focus pause. T3, out of scope this phase. See T2-SL-006 for the Tier 2 queue item.

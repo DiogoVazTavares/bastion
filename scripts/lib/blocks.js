@@ -68,6 +68,61 @@ export function mapPartners(doc, imageIds) {
 }
 
 /**
+ * Map a PanelSlider doc into a blocks.slider payload.
+ *
+ * @param {object}   doc            - Legacy MongoDB PanelSlider document.
+ * @param {object[]} slideImageIds  - Parallel array to doc.Slides (the ordered ISlide list).
+ *                                    Each entry is either { imageId: <number|null> } for a
+ *                                    SlideImage slide, or null for a SlideText slide.
+ *                                    Caller pre-resolves PictureRef → Strapi media ID via
+ *                                    uploadMedia (same responsibility as mapBuilding's
+ *                                    itemImageIds). Must be the same length and order as
+ *                                    doc.Slides.
+ *
+ * Identity key (for idempotency at the page level): the containing page's Strapi entry ID +
+ * the dynamic-zone index of this block. Slide order is preserved exactly from doc.Slides.
+ *
+ * Non-localised fields: background_color, slide-image.image.
+ * Localised fields:     title, show, show_title, slides (text within slide-text entries).
+ *
+ * The caller must pass the locale-appropriate doc (en/fr/nl MongoDB document). For the
+ * non-localised slide-image.image field the en imageId is authoritative and must be copied
+ * to fr/nl payloads via applyNonLocalised at the slide level — this is the same contract
+ * as mapBuilding/mapPartners. Because slides is itself a localised DZ, the caller handles
+ * this by passing identical slideImageIds across all three locale calls (image never changes
+ * per locale) and using normText for the localised text-slide text.
+ */
+export function mapSlider(doc, slideImageIds = []) {
+  const slides = (doc.Slides ?? []).map((slide, i) => {
+    // SlideImage: _t (Mongo discriminator) is "SlideImage", or presence of Image field
+    const isImage =
+      slide._t === 'SlideImage' ||
+      (slide.Image !== undefined && slide.Text === undefined);
+
+    if (isImage) {
+      return {
+        __component: 'blocks.slide-image',
+        image: slideImageIds[i]?.imageId ?? null,
+      };
+    }
+
+    // SlideText
+    return {
+      __component: 'blocks.slide-text',
+      text: normText(slide.Text),
+    };
+  });
+
+  return {
+    title:            doc.Title     ?? null,
+    show:             doc.Show      ?? true,
+    show_title:       doc.ShowTitle ?? true,
+    background_color: mapBackgroundColor(doc.BackgroundColor),
+    slides,
+  };
+}
+
+/**
  * Returns new payloads with non-localised fields copied from the 'en' payload to all locales.
  * Does not mutate the input.
  */
