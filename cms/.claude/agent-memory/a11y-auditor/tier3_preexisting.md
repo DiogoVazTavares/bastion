@@ -92,6 +92,36 @@ They are catalogued here so the auditor never re-raises them.
 - WCAG: 1.3.1 (A) — borderline; only a concern if columns are semantically equivalent list-like items
 - Status: Identical pattern in old `_Info.cshtml`. T3, out of scope this phase.
 
+## T3-015 — Lightbox close `<a>` has no accessible name
+- File: `old/Views/Shared/Blocks/_Lightbox.cshtml` line 32 / `web/src/components/blocks/Floors.astro` line 190
+- Issue: `<a class="icon icon--close-circle lightbox__close" data-behavior="lightbox-close">` — icon-only, no label.
+- WCAG: 4.1.2 (AA)
+- Status: pre-existing on old site — T3, out of scope this phase. T1-FL-01 covers the invisible-win `aria-label` on the rebuild.
+
+## T3-016 — Lightbox prev/next `<a>` controls have no accessible names
+- File: `old/Views/Shared/Blocks/_Lightbox.cshtml` lines 36-39 / `web/src/components/blocks/Floors.astro` lines 195-203
+- Issue: `icon--arrow-circle-left/right` links inside lightbox — icon-only, no label.
+- WCAG: 4.1.2 (AA)
+- Status: pre-existing on old site — T3, out of scope this phase. T1-FL-02 covers the invisible-win `aria-label` on the rebuild.
+
+## T3-017 — Lightbox container has no role="dialog" / aria-modal
+- File: `old/Scripts/Lightbox.ts` `_Init()` / `web/src/components/blocks/Floors.astro` openLightbox()
+- Issue: The injected container div has no `role`, `aria-modal`, or accessible name. Screen readers do not announce it as a dialog.
+- WCAG: 4.1.2 (AA)
+- Status: pre-existing on old site — T3, out of scope this phase. T2-FL-01 covers the queue item for the rebuild.
+
+## T3-018 — No focus management on lightbox open/close
+- File: `old/Scripts/Lightbox.ts` Open() / Close() / `web/src/components/blocks/Floors.astro` openLightbox() / closeLightbox()
+- Issue: Focus is not moved into the lightbox on open, not returned on close, and not trapped inside.
+- WCAG: 2.4.3 (AA), 2.1.2 (A)
+- Status: pre-existing on old site — T3, out of scope this phase. T2-FL-02 covers the queue item.
+
+## T3-019 — SVG rect and mobile-div floor triggers are keyboard-inaccessible
+- File: `old/Views/Shared/Blocks/_Floors.cshtml` lines 96 & 567 / `web/src/components/blocks/Floors.astro` lines 111-125 & 133-150
+- Issue: `<rect>` elements and `.floors__floor-mobile-item` divs have click handlers but no `tabindex`, `role`, or `keydown` handler. Not keyboard-operable.
+- WCAG: 2.1.1 (A)
+- Status: pre-existing on old site — T3, out of scope this phase. T2-FL-03 covers the queue item.
+
 ## T3-014 — Info block section outer uses `<div>` not `<article>` or `<section>`
 - File: `old/Views/Shared/Blocks/_Section.cshtml` line 22 uses `<article>` / `web/src/components/blocks/Info.astro` line 28 uses `<div>`
 - Issue: Old site rendered the outer block wrapper as `<article class="section">`. Rebuild uses `<div class="section">`. Loss of landmark semantics (minor — `<article>` as block wrapper is unusual and not a strong landmark).

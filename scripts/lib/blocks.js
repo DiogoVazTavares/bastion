@@ -194,7 +194,11 @@ export function mapInfo(doc, itemImageIds = []) {
   return {
     title:            doc.Title     ?? null,
     show:             doc.Show      ?? true,
-    show_title:       doc.ShowTitle ?? true,
+    // C# bool defaults to false; MongoDB.Driver omits fields serialised at their default value.
+    // A missing ShowTitle therefore means false, not true. Verified against Accommodation Mongo
+    // data: the first PanelInfo (spec details) has no ShowTitle field and the live site hides its
+    // title. All panels where ShowTitle is legitimately true store it explicitly as boolean true.
+    show_title:       doc.ShowTitle ?? false,
     background_color: mapBackgroundColor(doc.BackgroundColor),
     items,
   };

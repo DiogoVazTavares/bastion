@@ -21,7 +21,7 @@ interface Props {
   autoOpenUid?: string;
 }
 
-const { show, background_color, intro_title, caption, floors, autoOpenUid } = Astro.props;
+const { show, show_title, title, background_color, intro_title, caption, floors, autoOpenUid } = Astro.props;
 
 const bgClass: Record<string, string> = {
   Lightgray: "section--bg-light-gray",
@@ -29,7 +29,7 @@ const bgClass: Record<string, string> = {
   Blue: "section--bg-green",
 };
 
-const outerClass = ["floors", bgClass[background_color]]
+const sectionClass = ["section", bgClass[background_color]]
   .filter(Boolean)
   .join(" ");
 
@@ -66,7 +66,10 @@ const hasImages = (f: FloorItem) => Boolean(f.uid && f.images.length > 0);
 
 {
   show && (
-    <div class={outerClass} data-behavior="floors" data-autoopen-uid={autoOpenUid ?? undefined}>
+    <div class={sectionClass} data-spy-enter-viewport>
+      <div class="section__inner">
+        {show_title && title && <h4 class="section__title">{title}</h4>}
+        <div class="floors" data-behavior="floors" data-autoopen-uid={autoOpenUid ?? undefined}>
       <div class="floors__intro">
         <Fragment set:html={intro_title ?? ""} />
       </div>
@@ -210,6 +213,8 @@ const hasImages = (f: FloorItem) => Boolean(f.uid && f.images.length > 0);
           </div>
         ))}
       </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -257,22 +262,42 @@ const hasImages = (f: FloorItem) => Boolean(f.uid && f.images.length > 0);
 <script>
   // Island lightbox: open a floor's embedded gallery on click, reuse the ported Slider
   // for image navigation. No network round-trip (see docs/decisions.md 2026-06-23).
-  // Deep-link support added for issue #20: pushState on open, replaceState on close.
+  //
+  // Deep-link support (issue #20) mirrors the legacy HistoryManager.ChangeState behaviour:
+  // opening a lightbox appends "/{uid}" to the *current page URL* (e.g. /en/accommodation →
+  // /en/accommodation/{uid}); closing it strips the suffix back off. Browser back/forward is
+  // driven from the URL via popstate so the lightbox open/close stays in sync with history.
   import { Discover as DiscoverSliders } from "../../scripts/Slider";
 
-  function closeLightbox() {
-    // Pop the uid suffix from the URL if we pushed one.
-    if ((history.state as any)?.lightboxUid) {
-      history.replaceState({}, "", ".");
-    }
+  // Populated in init(); needed by the popstate handler to resolve a uid → its hidden fragment.
+  const lightboxesByUid = new Map<string, Element>();
+
+  // The uid the URL currently points to (its last path segment), if it names a known lightbox.
+  function currentSuffix(): string | null {
+    const segments = window.location.pathname.replace(/\/$/, "").split("/");
+    const last = segments[segments.length - 1];
+    return last && lightboxesByUid.has(last) ? last : null;
+  }
+
+  function closeLightbox(updateHistory = true) {
     const container = document.querySelector(".our-lightbox__container");
     const bg = document.querySelector(".our-lightbox__bg");
     if (container) container.remove();
     if (bg) bg.remove();
     document.body.classList.remove("our-lightbox", "our-lightbox--shown");
+
+    // Strip the trailing "/{uid}" back off the URL (mirrors legacy HistoryManager close).
+    if (updateHistory && currentSuffix()) {
+      const stripped = window.location.pathname.replace(/\/[^/]+\/?$/, "");
+      history.pushState(
+        {},
+        "",
+        stripped + window.location.search + window.location.hash,
+      );
+    }
   }
 
-  function openLightbox(source: Element) {
+  function openLightbox(source: Element, updateHistory = true) {
     // Avoid stacking multiple open lightboxes.
     if (document.querySelector(".our-lightbox__container")) return;
 
@@ -285,7 +310,7 @@ const hasImages = (f: FloorItem) => Boolean(f.uid && f.images.length > 0);
 
     const bg = document.createElement("div");
     bg.className = "our-lightbox__bg";
-    bg.addEventListener("click", closeLightbox);
+    bg.addEventListener("click", () => closeLightbox());
 
     document.body.appendChild(container);
     document.body.appendChild(bg);
@@ -299,18 +324,25 @@ const hasImages = (f: FloorItem) => Boolean(f.uid && f.images.length > 0);
 
     container
       .querySelectorAll("[data-behavior='lightbox-close']")
-      .forEach((el) => el.addEventListener("click", closeLightbox));
+      .forEach((el) => el.addEventListener("click", () => closeLightbox()));
 
     // Initialise the cloned slider (Discover only picks up un-initialised sliders).
     DiscoverSliders();
 
-    // Push the floor's uid as a URL suffix for shareability (mirrors legacy HistoryManager).
+    // Append "/{uid}" to the current page URL for shareability, unless it is already there
+    // (cold-load deep link) — mirrors legacy HistoryManager.ChangeState (line 190 of Lightbox.ts).
     const suffix = source.getAttribute("data-lightbox-id");
-    if (suffix) history.pushState({ lightboxUid: suffix }, "", suffix);
+    if (updateHistory && suffix && currentSuffix() !== suffix) {
+      const base = window.location.pathname.replace(/\/$/, "");
+      history.pushState(
+        { lightboxUid: suffix },
+        "",
+        `${base}/${suffix}${window.location.search}${window.location.hash}`,
+      );
+    }
   }
 
   function init() {
-    const lightboxesByUid = new Map<string, Element>();
     document
       .querySelectorAll(".floors__lightboxes [data-lightbox-id]")
       .forEach((el) => {
@@ -333,11 +365,24 @@ const hasImages = (f: FloorItem) => Boolean(f.uid && f.images.length > 0);
       if (e.key === "Escape") closeLightbox();
     });
 
-    // Auto-open on cold load if the page was reached via a uid deep-link.
+    // Browser back/forward: open/close the lightbox to match whatever the URL now points to,
+    // without pushing further history entries.
+    window.addEventListener("popstate", () => {
+      const suffix = currentSuffix();
+      const isOpen = !!document.querySelector(".our-lightbox__container");
+      if (suffix && !isOpen) {
+        openLightbox(lightboxesByUid.get(suffix)!, false);
+      } else if (!suffix && isOpen) {
+        closeLightbox(false);
+      }
+    });
+
+    // Auto-open on cold load if the page was reached via a uid deep-link. The URL already
+    // carries the suffix, so do not push another history entry.
     const floorsEl = document.querySelector("[data-behavior='floors']");
     const autoUid = floorsEl?.getAttribute("data-autoopen-uid");
     if (autoUid && lightboxesByUid.has(autoUid)) {
-      openLightbox(lightboxesByUid.get(autoUid)!);
+      openLightbox(lightboxesByUid.get(autoUid)!, false);
     }
   }
 

@@ -111,16 +111,25 @@ async function createLocalizationAndPublish(singleType, locale, data) {
  * Upload a file buffer to the Strapi media library.
  * Returns the Strapi media object { id, url, ... }.
  *
+ * The legacy CMS uses a single Image.Legend value for both the img alt attribute and
+ * the figcaption. We therefore set both alternativeText and caption to the same altText
+ * value so that Astro's Slider component (which reads caption for <figcaption>) works
+ * correctly. This matches _Slider.cshtml:28,32 which renders Legend in both places.
+ *
  * @param {string} filename
  * @param {Buffer} buffer
  * @param {string} mimeType
- * @param {string} [altText]  - sets alternativeText in Strapi media library
+ * @param {string} [altText]  - sets both alternativeText and caption in Strapi media library
  */
 export async function uploadMedia(filename, buffer, mimeType, altText) {
   const form = new FormData();
   form.append('files', new Blob([buffer], { type: mimeType }), filename);
   if (altText !== undefined) {
-    form.append('fileInfo', JSON.stringify({ alternativeText: altText, name: filename }));
+    form.append('fileInfo', JSON.stringify({
+      alternativeText: altText,
+      caption: altText,
+      name: filename,
+    }));
   }
 
   const url = `${strapiUrl()}/api/upload`;
@@ -142,6 +151,39 @@ export async function uploadMedia(filename, buffer, mimeType, altText) {
     );
   }
   return json[0];
+}
+
+/**
+ * Updates the caption (and optionally alternativeText/name) of an existing Strapi media file.
+ *
+ * Uses POST /api/upload?id=<id> with a fileInfo multipart field — the Strapi v5 upload plugin
+ * update path, confirmed working against the local instance.
+ *
+ * Called by resolveAssets when a manifest hit is found but the file's caption is null/empty,
+ * so re-runs correctly backfill caption on already-uploaded images without re-uploading.
+ *
+ * @param {number} strapiId
+ * @param {{ alternativeText?: string, caption?: string, name?: string }} fileInfo
+ * @returns {Promise<object>} Updated Strapi media object.
+ */
+export async function updateMediaInfo(strapiId, fileInfo) {
+  const form = new FormData();
+  form.append('fileInfo', JSON.stringify(fileInfo));
+
+  const url = `${strapiUrl()}/api/upload?id=${strapiId}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${process.env.STRAPI_TOKEN}` },
+    body: form,
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Strapi updateMediaInfo(${strapiId}) failed (${res.status}):\n${body}`);
+  }
+
+  const json = await res.json();
+  return Array.isArray(json) ? json[0] : json;
 }
 
 /**

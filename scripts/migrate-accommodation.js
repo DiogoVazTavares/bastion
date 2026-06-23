@@ -29,7 +29,7 @@
 import mongodb from 'mongodb';
 const { ObjectId } = mongodb;
 import { LOCALES, withDatabase } from './lib/mongo.js';
-import { validateStrapiEnv, putLocale, uploadMedia, verifyMedia } from './lib/strapi.js';
+import { validateStrapiEnv, putLocale, uploadMedia, verifyMedia, updateMediaInfo } from './lib/strapi.js';
 import { resolveAssets, loadManifest, saveManifest } from './lib/assets.js';
 import {
   mapParagraph,
@@ -74,6 +74,10 @@ function makeFetchBytes() {
 function makeUpload() {
   return (filename, buffer, mimeType, altText) =>
     uploadMedia(filename, buffer, mimeType, altText);
+}
+
+function makeUpdateInfo() {
+  return (strapiId, fileInfo) => updateMediaInfo(strapiId, fileInfo);
 }
 
 // ---------------------------------------------------------------------------
@@ -181,7 +185,7 @@ async function fetchPanels(db, doc) {
  * only for the en locale pass; the caller stores the resulting IDs and passes the same
  * values when mapping fr/nl (Strapi media IDs are global — no re-upload needed).
  */
-async function mapPanel(panel, manifest, fetchBytes, upload) {
+async function mapPanel(panel, manifest, fetchBytes, upload, updateInfo) {
   const type = panel._t;
 
   if (type === 'PanelText') {
@@ -199,6 +203,7 @@ async function mapPanel(panel, manifest, fetchBytes, upload) {
           fetchBytes,
           upload,
           verify: verifyMedia,
+          updateInfo,
         });
         Object.assign(manifest, result.manifest);
         slideImageIds.push({ imageId: result.ids.get(ref.Id) ?? null });
@@ -219,6 +224,7 @@ async function mapPanel(panel, manifest, fetchBytes, upload) {
           fetchBytes,
           upload,
           verify: verifyMedia,
+          updateInfo,
         });
         Object.assign(manifest, result.manifest);
         itemImageIds.push({ imageId: result.ids.get(ref.Id) ?? null });
@@ -240,6 +246,7 @@ async function mapPanel(panel, manifest, fetchBytes, upload) {
           fetchBytes,
           upload,
           verify: verifyMedia,
+          updateInfo,
         });
         Object.assign(manifest, result.manifest);
         floorImageIds.push(imageRefs.map(r => result.ids.get(r.Id)).filter(id => id != null));
@@ -281,6 +288,7 @@ async function main() {
 
   const fetchBytes = makeFetchBytes();
   const upload = makeUpload();
+  const updateInfo = makeUpdateInfo();
 
   // 3. Build payloads per locale
   console.log('\nBuilding payloads…');
@@ -300,6 +308,7 @@ async function main() {
         fetchBytes,
         upload,
         verify: verifyMedia,
+        updateInfo,
       });
       Object.assign(manifest, result.manifest);
       heroImageId = result.ids.get(heroRef.Id) ?? null;
@@ -312,7 +321,7 @@ async function main() {
     process.stdout.write(`  [${locale}] mapping ${panels.length} panel(s)… `);
     const blocks = [];
     for (const panel of panels) {
-      const block = await mapPanel(panel, manifest, fetchBytes, upload);
+      const block = await mapPanel(panel, manifest, fetchBytes, upload, updateInfo);
       if (block === null) {
         console.warn(`\n  [${locale}] WARNING: unrecognised panel type "${panel._t}" — skipped`);
       } else {
