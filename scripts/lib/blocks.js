@@ -123,6 +123,46 @@ export function mapSlider(doc, slideImageIds = []) {
 }
 
 /**
+ * Map a PanelFloors doc into a blocks.floors payload.
+ *
+ * @param {object}     doc           - Legacy MongoDB PanelFloors document.
+ * @param {number[][]} floorImageIds - Parallel array to doc.Floors. Each inner array holds
+ *                                    the Strapi media IDs (numbers) for that floor's images.
+ *                                    Same upload-then-id pattern as mapBuilding's itemImageIds,
+ *                                    one level deeper (per-floor array rather than flat).
+ *
+ * Identity key: containing page Strapi entry ID + DZ index of this block.
+ *
+ * Non-localised fields: background_color, floors[].orientation, floors[].uid, floors[].images.
+ *   Caller copies these from the 'en' payload to fr/nl via applyNonLocalised at the floor-item
+ *   level — same contract as mapBuilding.
+ * Localised fields: title, intro_title, caption, show, show_title, floors[].number,
+ *   floors[].text, floors[].description.
+ */
+export function mapFloors(doc, floorImageIds = []) {
+  const ORIENTATION_BY_INDEX = { 0: 'Left', 1: 'Right', 2: 'Full' };
+  const floors = (doc.Floors ?? []).map((floor, i) => ({
+    number:      floor.Number ?? null,
+    orientation: typeof floor.Orientation === 'string'
+                   ? floor.Orientation
+                   : (ORIENTATION_BY_INDEX[floor.Orientation] ?? 'Left'),
+    text:        floor.Text ?? null,
+    description: floor.Description ?? null,
+    uid:         floor.UID ?? null,
+    images:      floorImageIds[i] ?? [],
+  }));
+  return {
+    title:            doc.Title ?? null,
+    intro_title:      normText(doc.IntroTitle),
+    caption:          doc.Caption ?? null,
+    show:             doc.Show ?? true,
+    show_title:       doc.ShowTitle ?? true,
+    background_color: mapBackgroundColor(doc.BackgroundColor),
+    floors,
+  };
+}
+
+/**
  * Returns new payloads with non-localised fields copied from the 'en' payload to all locales.
  * Does not mutate the input.
  */

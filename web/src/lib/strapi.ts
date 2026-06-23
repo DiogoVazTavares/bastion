@@ -82,6 +82,15 @@ export interface BuildingItemData {
   text: string | null;
 }
 
+export interface FloorItemData {
+  number: string | null;
+  orientation: "Left" | "Right" | "Full";
+  text: string | null;
+  description: string | null;
+  uid: string | null;
+  images: MediaRef[];
+}
+
 export type BuildingBlock =
   | {
       __component: "blocks.paragraph";
@@ -116,6 +125,19 @@ export type BuildingBlock =
       text: string | null;
       images: MediaRef[];
     };
+
+// blocks.floors is Accommodation-only (PanelFloors lives under Accommodation, not Building).
+// FloorItemData + FloorsBlock are consumed by the Accommodation fetch (issue #20).
+export interface FloorsBlock {
+  __component: "blocks.floors";
+  show: boolean;
+  show_title: boolean;
+  background_color: BgColor;
+  title: string | null;
+  intro_title: string | null;
+  caption: string | null;
+  floors: FloorItemData[];
+}
 
 export interface BuildingData {
   title: string | null;
