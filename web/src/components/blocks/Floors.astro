@@ -189,16 +189,19 @@ const hasImages = (f: FloorItem) => Boolean(f.uid && f.images.length > 0);
                 <a
                   class="icon icon--close-circle lightbox__close"
                   data-behavior="lightbox-close"
+                  aria-label="Close lightbox"
                 />
                 {floor.images.length > 1 && (
                   <>
                     <a
                       class="icon icon--arrow-circle-left lightbox__control lightbox__control--previous"
                       data-behavior="slider-previous"
+                      aria-label="Previous image"
                     />
                     <a
                       class="icon icon--arrow-circle-right lightbox__control lightbox__control--next"
                       data-behavior="slider-next"
+                      aria-label="Next image"
                     />
                   </>
                 )}
