@@ -19,6 +19,7 @@ Baseline standard: **no regressions + invisible wins.** No stated compliance dri
 | 2 | Slider.astro (nav dots) | 2.1.1 / 4.1.2 (A/AA) | Nav-dot `<a>` not focusable, no accessible name (pre-existing, T3-010) | `role="button" tabindex="0"` + `aria-label="Slide N"`, or `<button>`; keydown in Slider.ts | `aria-label`/`tabindex` invisible; `<button>` changes element type | proposed | |
 | 3 | Slider.astro / Slider.ts | 4.1.3 (AA) | No live region — slide changes not announced (pre-existing, T3-011) | `aria-live="polite" aria-atomic="true"` on `slider__slides`, or sr-only status div updated in `_Go` | invisible / visually-hidden | proposed | |
 | 4 | Slider.ts (autoplay) | 2.2.2 (A) | 4000ms autoplay, no pause on hover/focus (pre-existing, T3-012) | (a) `mouseenter`/`focus`→Pause, `mouseleave`/`blur`→Play in Discover() [JS-only]; or (b) visible pause button | (a) invisible; (b) adds a button | proposed | |
+| 5 | Info.astro:30 + Paragraph.astro:27, ParagraphImage.astro:29, Partners.astro:28, Slider.astro:39 (cross-cutting) | 1.3.1 (A), 2.4.6 (AA) | Section title is `<h4>` with no `<h2>`/`<h3>` ancestor — skipped heading level (old site used `<h1>`, also wrong). Surfaced auditing #14. | `<h4 class="section__title">` → `<h2 class="section__title">` in all five files | None — `.section__title` styled by class only | proposed | |
 
 ## Approved changes — handoff to parity-qa
 
