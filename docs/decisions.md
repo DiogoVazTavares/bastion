@@ -96,6 +96,30 @@ on their `blocks` dynamic zone attribute from the start. Logged in `docs/model-m
 (DevTools → Application → Clear site data). A plain hard-refresh is insufficient — the admin
 keeps an IndexedDB schema cache. See also the 2026-06-17 "clean rebuild" entry above.
 
+## 2026-06-23 — Floors lightbox: page-independent island; deep-link deferred to Accommodation (#20)
+
+Discovered while building `blocks.floors` (#15) that the legacy floor lightbox involves **two**
+URLs, only one of which is user-facing:
+
+1. **XHR partial endpoint** (`data-lightbox-url` = `/{lang}/Lightbox/{uid}`, capital L): internal,
+   XHR-only, returns the `_Lightbox` HTML fragment. Never in the address bar. Not reproduced as a
+   route.
+2. **Shareable deep-link** (`/{lang}/Accommodation/{uid}`): built client-side via
+   `history.pushState` (suffix = floor uid appended to the current page URL on lightbox open).
+   This is a real shareable URL that `url-inventory.md` originally missed — now logged there.
+
+**Decision for #15 (`blocks.floors`):** implement the lightbox as a **self-contained Astro
+island** — each floor's images are embedded in the rendered component (hidden `_Lightbox`-parity
+markup), and the inline script opens/navigates them with **no network round-trip**. This drops
+the legacy XHR-fragment endpoint entirely (it was an internal implementation detail, not a parity
+surface) and keeps the slice **page-independent** — the block carries no knowledge of which page
+hosts it.
+
+**Deferred to #20 (Accommodation page):** the shareable deep-link round-trip — static
+`/[locale]/accommodation/[uid]` pages that auto-open the lightbox on cold load, plus
+pushState-on-open / pop-on-close. The suffix is appended to the *hosting page's* URL, so this can
+only be wired once the accommodation page exists. See `docs/url-inventory.md`.
+
 ## 2026-06-11 — Backup Worker needs a directory owner
 
 The content-backup Cron Worker (ADR 0004) fits none of the existing agent directories

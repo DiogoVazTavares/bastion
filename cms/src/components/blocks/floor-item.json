@@ -1,0 +1,40 @@
+{
+  "collectionName": "components_blocks_floor_items",
+  "info": {
+    "displayName": "Floor Item",
+    "icon": "layout",
+    "description": "PanelFloors.Floor — number, orientation, title, description, UID, lightbox images"
+  },
+  "options": {},
+  "attributes": {
+    "number": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "orientation": {
+      "type": "enumeration",
+      "enum": ["Left", "Right", "Full"],
+      "default": "Left",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "text": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "description": {
+      "type": "text",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "uid": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "images": {
+      "type": "media",
+      "multiple": true,
+      "required": false,
+      "allowedTypes": ["images"],
+      "pluginOptions": { "i18n": { "localized": false } }
+    }
+  }
+}

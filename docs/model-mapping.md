@@ -201,7 +201,27 @@ Title + columns (image + HTML text). Used on Accommodation and Location page dyn
 | `text` | `Text` | CKEditor5 (`bastion` preset) | L | `[HTML(Legend="Texte", Localized=true)]` with `CustomStyles`; same CKE5 setup as `paragraph-image` and `building-item` |
 
 ### blocks.floors ← `PanelFloors`
-Title + intro + floor items with lightbox images. _(field table TBD)_
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `title` | `Title` | string | L | `[Text(Legend = "Titre", Localized = true)]` |
+| `intro_title` | `IntroTitle` | CKEditor5 (`bastion` preset) | L | `[HTML(Legend = "Intro Titre", Localized = true)]` |
+| `caption` | `Caption` | string | L | `[Text(Legend = "* caption text", Localized = true)]` |
+| `show` | `Show` | boolean (default true) | L | forced deviation #1 (flattened inheritance) |
+| `show_title` | `ShowTitle` | boolean (default true) | L | forced deviation #1 |
+| `background_color` | `BackgroundColor` | enumeration (White/Lightgray/Gray/Blue, default White) | N | forced deviation #4: C# enum named `Green`; Strapi uses `Blue` |
+| `floors` | `Floor` leaves | repeatable component (`blocks.floor-item`) | L | wrapper localised; non-localised item fields handled per row |
+
+#### blocks.floor-item ← `PanelFloors.Floor`
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `number` | `Number` | string | L | `[Text(Legend = "Number", Localized = true)]` |
+| `orientation` | `Orientation` | enumeration (Left/Right/Full, default Left) | N | `[Enumeration(Legend = "Orientation", Localized = false)]`; MongoDB stores as int index 0/1/2 |
+| `text` | `Text` | string | L | `[Text(Legend = "Floor title", Localized = true)]` |
+| `description` | `Description` | text | L | `[Text(Legend = "Floor description", Localized = true, Multiline = true)]` |
+| `uid` | `UID` | string | N | `[UID(Base = "Number")]` — generated from Number, not localised |
+| `images` | `Images` | media (multiple, images only) | N | `[Pictures(Legend = "images", Localized = false)]`; uploaded to media library |
 
 ### blocks.map ← `PanelMap`
 Title + building coordinates + place markers (category). _(field table TBD)_
