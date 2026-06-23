@@ -182,7 +182,23 @@ Full-width banner: title, cover text, image, optional video. _(field table TBD)_
 | `text` | `Text` | CKEditor5 (`bastion` preset) | L | `[HTML(Legend = "Text", Localized = true)]` |
 
 ### blocks.info ← `PanelInfo`
-Title + columns (image + HTML text). _(field table TBD)_
+
+Title + columns (image + HTML text). Used on Accommodation and Location page dynamic zones.
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `title` | `Title` | string | L | `[Text(Legend="Title", Localized=true)]` |
+| `show` | `Show` | boolean (default `true`) | L | `[Switch(Legend="Show on website", Localized=true)]` |
+| `show_title` | `ShowTitle` | boolean (default `true`) | L | `[Switch(Legend="Show Title", Localized=true)]` |
+| `background_color` | `BackgroundColor` | enumeration (`White`/`Lightgray`/`Gray`/`Blue`, default `White`) | N | `[Enumeration("background color", Localized=false)]`; deviation #4 — C# `Green` stored as `Blue` (matching `slider.json` precedent) |
+| `items` | _(list of `PanelInfoItem`)_ | repeatable component `blocks.info-item` | L | nested `[Leaf]` class; localised so item order can vary per locale |
+
+#### blocks.info-item ← `PanelInfo.PanelInfoItem`
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `image` | `Image` | media (single, images only) | N | `[Picture(Legend="Image")]` → `PictureRef`; no `Localized` flag on attribute — shared across locales |
+| `text` | `Text` | CKEditor5 (`bastion` preset) | L | `[HTML(Legend="Texte", Localized=true)]` with `CustomStyles`; same CKE5 setup as `paragraph-image` and `building-item` |
 
 ### blocks.floors ← `PanelFloors`
 

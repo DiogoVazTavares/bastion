@@ -163,6 +163,44 @@ export function mapFloors(doc, floorImageIds = []) {
 }
 
 /**
+ * Map a PanelInfo doc into a blocks.info payload.
+ *
+ * @param {object}   doc           - Legacy MongoDB PanelInfo document.
+ * @param {object[]} itemImageIds  - Parallel array to doc.Items (the ordered PanelInfoItem list).
+ *                                   Each entry is { imageId: <number|null> } where imageId is the
+ *                                   Strapi media library ID for the item's PictureRef Image.
+ *                                   Caller pre-resolves PictureRef → Strapi media ID via
+ *                                   uploadMedia (same responsibility as mapBuilding's
+ *                                   itemImageIds). Must be the same length and order as
+ *                                   doc.Items. Pass [] or omit when there are no items.
+ *
+ * Identity key (for idempotency at the page level): the containing page's Strapi entry ID +
+ * the dynamic-zone index of this block. Item order is preserved exactly from doc.Items.
+ *
+ * Non-localised fields: background_color, items[].image.
+ * Localised fields:     title, show, show_title, items[].text.
+ *
+ * The caller must pass the locale-appropriate doc (en/fr/nl MongoDB document). For the
+ * non-localised items[].image field the en imageId is authoritative and must be copied to
+ * fr/nl payloads via applyNonLocalised at the block level — same contract as mapBuilding.
+ * The caller must upload each PanelInfoItem.Image to the Strapi media library before calling
+ * this function and pass the resulting media IDs in itemImageIds.
+ */
+export function mapInfo(doc, itemImageIds = []) {
+  const items = (doc.Items ?? []).map((item, i) => ({
+    image: itemImageIds?.[i]?.imageId ?? null,
+    text:  normText(item.Text),
+  }));
+  return {
+    title:            doc.Title     ?? null,
+    show:             doc.Show      ?? true,
+    show_title:       doc.ShowTitle ?? true,
+    background_color: mapBackgroundColor(doc.BackgroundColor),
+    items,
+  };
+}
+
+/**
  * Returns new payloads with non-localised fields copied from the 'en' payload to all locales.
  * Does not mutate the input.
  */
