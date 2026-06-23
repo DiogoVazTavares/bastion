@@ -43,13 +43,15 @@ metadata:
 - Both live and rebuilt lack hreflang/canonical on Accommodation. Parity holds — not a regression.
 - Still to be addressed globally (not in scope of issue #20 specifically).
 
-### BUG-6 (NEW, 2026-06-23): Lightbox slider prev/next arrows non-functional — STILL BROKEN
-- **Root cause**: `BaseLayout.astro` `is:inline` script (lines 78-159) contains an `initSlider` function that runs `document.querySelectorAll("[data-behavior='slider']").forEach(initSlider)` at DOMContentLoaded. It picks up hidden lightbox templates inside `.floors__lightboxes[hidden]` because it has NO `[hidden]` guard. It strips `data-behavior="slider"` from them and applies `our-slider` classes but does NOT attach click listeners for prev/next arrows.
-- When a lightbox is opened and cloned, the cloned `<div class="lightbox__inner">` has no `data-behavior="slider"`, so `DiscoverSliders()` from Slider.ts skips it. Prev/next click listeners are never bound.
-- The `Slider.ts` guard (`if (sliderContainer.closest("[hidden]")) return`) is correct but is rendered moot because the `is:inline` script runs first.
-- **Evidence**: `data-behavior` is null on all 5 lightbox templates before any lightbox is opened. Verified via Playwright DOM inspection.
-- **Fix needed**: `BaseLayout.astro` `is:inline` `initSlider` must add `if (container.closest('[hidden]')) return;` at the top — or the inline slider must be removed and replaced entirely by `Slider.ts` calls (preferred). Owner: astro-builder.
-- FIX-2 was reported as fixed by astro-builder but the fix (adding `[hidden]` guard in `Slider.ts`) is in the wrong place — the `is:inline` script is the one initialising the templates.
+### BUG-6: Lightbox slider prev/next arrows non-functional — CONFIRMED FIXED (2026-06-23 re-verify)
+- **Root cause (original)**: `BaseLayout.astro` `is:inline` script had an `initSlider` function that stripped `data-behavior="slider"` from lightbox templates before clone, leaving Discover() nothing to initialise.
+- **Fix applied**: duplicate `is:inline` initSlider block REMOVED from `BaseLayout.astro`. `BaseLayout.astro` now only contains ScrollSpy code in its inline script. `Slider.ts` `Discover()` with `[hidden]` guard is the sole slider initialiser. `Floors.astro` calls `DiscoverSliders()` after cloning into the live DOM.
+- **Verified 2026-06-23**: all 3 locales (en uid=22, fr uid=uid-9b68e793, nl uid=uid-c2579ab3) — 3 slides each.
+  - Template `.lightbox__inner` retains `data-behavior="slider"` on page load (not stripped): PASS
+  - Cloned `.lightbox__inner` after open: `data-behavior=null`, `our-slider` class present (Discover ran): PASS
+  - Next arrow: `translate3d(0%,0,0)` → `translate3d(-100%,0,0)`, `our-slider__slide--current` moves to 2nd slide: PASS
+  - Prev arrow: `translate3d(-100%,0,0)` → `translate3d(0%,0,0)`, 1st slide current again: PASS
+  - Deep-link cold-load /en/accommodation/22: lightbox auto-opens, slider initialised, next arrow works: PASS
 
 ## Lightbox URL behaviour — PASS (confirmed re-verified 2026-06-23)
 
