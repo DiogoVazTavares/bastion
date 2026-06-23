@@ -95,9 +95,46 @@ function extractStructure(page) {
     results.hasParagraph = !!document.querySelector('.paragraph');
     results.hasInfo = !!document.querySelector('.info');
 
-    // Block order via first BEM class presence
+    // FIX-5: Slider figcaptions (main gallery slider only, not lightbox slides)
+    const mainSlider = document.querySelector('.slider[data-behavior="slider"], .slider.our-slider');
+    if (mainSlider) {
+      results.sliderFigcaptions = Array.from(
+        mainSlider.querySelectorAll('.slider__slide-figcaption')
+      ).map((el) => el.textContent.trim());
+    } else {
+      // Slider may already be initialised (our-slider class added, data-behavior removed)
+      const sliderEl = document.querySelector('.slider');
+      results.sliderFigcaptions = sliderEl
+        ? Array.from(sliderEl.querySelectorAll('.slider__slide-figcaption')).map((el) => el.textContent.trim())
+        : [];
+    }
+
+    // FIX-4: Info blocks — collect each info block's section title (or null if hidden)
+    results.infoBlocks = Array.from(document.querySelectorAll('.section .info')).map((infoEl) => {
+      const section = infoEl.closest('.section');
+      const titleEl = section ? section.querySelector('.section__title') : null;
+      return {
+        title: titleEl ? titleEl.textContent.trim() : null,
+        itemCount: infoEl.querySelectorAll('.info__item').length,
+        hasImages: infoEl.querySelectorAll('.info__image img').length > 0,
+        imageSrcs: Array.from(infoEl.querySelectorAll('.info__image img')).map((img) => img.getAttribute('src')),
+      };
+    });
+
+    // FIX-3: Floors section wrapper — check .section.section__inner wraps the floors element
+    const floorsEl = document.querySelector('[data-behavior="floors"]');
+    results.floorsSectionWrapper = floorsEl
+      ? !!floorsEl.closest('.section')
+      : false;
+    results.floorsHasSectionInner = floorsEl
+      ? !!floorsEl.closest('.section__inner')
+      : false;
+
+    // Block order via first BEM class presence — exclude elements inside .floors__lightboxes[hidden]
     const blockOrder = [];
     Array.from(document.querySelectorAll('[class]')).forEach((el) => {
+      // Skip anything inside the hidden lightbox templates — they're not rendered blocks
+      if (el.closest('.floors__lightboxes')) return;
       const cls = coerceClass(el);
       if (/\bparagraph\b/.test(cls) && blockOrder[blockOrder.length - 1] !== 'paragraph') blockOrder.push('paragraph');
       else if (/\bslider\b/.test(cls) && !/slider__/.test(cls) && blockOrder[blockOrder.length - 1] !== 'slider') blockOrder.push('slider');
@@ -145,6 +182,166 @@ function cropPNG(img, width, height) {
     }
   }
   return out;
+}
+
+// ── FIX-2: Lightbox slider prev/next navigation ────────────────────────────────
+async function testLightboxSliderNavigation(browser, locale, floorUid, findings) {
+  console.log(`  [fix2-lightbox-nav] testing lightbox prev/next for ${locale}/${floorUid}`);
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const page = await ctx.newPage();
+
+  const pageUrl = `${LOCAL_BASE}/${locale}/accommodation`;
+  await page.goto(pageUrl, { waitUntil: 'networkidle', timeout: 30000 });
+
+  // Open the lightbox via the trigger
+  const trigger = page.locator(`[data-behavior="lightbox"][data-lightbox-suffix="${floorUid}"]`).first();
+  if (await trigger.count() === 0) {
+    findings.push(`FIX-2: no lightbox trigger for uid=${floorUid} on ${locale}`);
+    await ctx.close();
+    return;
+  }
+  await trigger.click();
+  await page.waitForTimeout(600); // let the lightbox init + slider Discover()
+
+  // Verify the lightbox is open
+  const container = page.locator('.our-lightbox__container');
+  if (await container.count() === 0) {
+    findings.push(`FIX-2: lightbox did not open for uid=${floorUid} on ${locale}`);
+    await ctx.close();
+    return;
+  }
+
+  // Count slides in the lightbox slider
+  const slideCount = await page.locator('.our-lightbox__container [data-behavior="slider-slide"], .our-lightbox__container .our-slider__slide').count();
+  console.log(`    lightbox slide count: ${slideCount}`);
+
+  if (slideCount < 2) {
+    // Only 1 image — prev/next arrows not rendered; this is expected
+    findings.push(`FIX-2 (info): uid=${floorUid} has only ${slideCount} slide(s) — prev/next not rendered (expected)`);
+    await ctx.close();
+    return;
+  }
+
+  // Check: does the cloned slider still have data-behavior="slider"?
+  // If BaseLayout initSlider stripped it from the template, the clone won't have it either,
+  // so DiscoverSliders() will skip it and prev/next listeners will never be attached.
+  const clonedSliderHasDataBehavior = await page.locator('.our-lightbox__container .lightbox__inner').evaluate(
+    (el) => el.hasAttribute('data-behavior')
+  );
+  console.log(`    cloned slider has data-behavior: ${clonedSliderHasDataBehavior}`);
+  if (!clonedSliderHasDataBehavior) {
+    findings.push(`FIX-2: FAIL — cloned lightbox slider has NO data-behavior="slider" (BaseLayout.initSlider stripped it from template before clone). DiscoverSliders() cannot initialize it → prev/next listeners absent. Root cause: BaseLayout.astro is:inline initSlider lacks [hidden] guard.`);
+    await ctx.close();
+    return;
+  }
+
+  // Grab transform state before click
+  const slidesWrapper = page.locator('.our-lightbox__container [data-behavior="slider-slides"], .our-lightbox__container .our-slider__slides').first();
+  const transformBefore = await slidesWrapper.evaluate((el) => el.style.transform);
+  console.log(`    transform before next: "${transformBefore}"`);
+
+  // Click Next — use force:true because lightbox slides can visually overlay the arrows
+  // (the slides have full-width coverage; in production users click the visible icon area
+  // which protrudes, but headless Playwright needs force to dispatch the event to the <a>).
+  const nextBtn = page.locator('.our-lightbox__container [data-behavior="slider-next"]').first();
+  const nextBtnCount = await nextBtn.count();
+  if (nextBtnCount === 0) {
+    findings.push(`FIX-2: FAIL — no [data-behavior="slider-next"] in lightbox container for ${locale}/${floorUid}`);
+    await ctx.close();
+    return;
+  }
+  await nextBtn.click({ force: true });
+  await page.waitForTimeout(400);
+  const transformAfterNext = await slidesWrapper.evaluate((el) => el.style.transform);
+  console.log(`    transform after next:  "${transformAfterNext}"`);
+
+  if (transformAfterNext === transformBefore) {
+    findings.push(`FIX-2: FAIL — next arrow did NOT change slider transform on ${locale}/${floorUid} (before="${transformBefore}", after="${transformAfterNext}")`);
+  } else {
+    console.log(`    next arrow: PASS (transform changed)`);
+  }
+
+  // Click Previous — should go back
+  const prevBtn = page.locator('.our-lightbox__container [data-behavior="slider-previous"]').first();
+  if (await prevBtn.count() === 0) {
+    findings.push(`FIX-2: FAIL — no [data-behavior="slider-previous"] in lightbox container for ${locale}/${floorUid}`);
+    await ctx.close();
+    return;
+  }
+  await prevBtn.click({ force: true });
+  await page.waitForTimeout(400);
+  const transformAfterPrev = await slidesWrapper.evaluate((el) => el.style.transform);
+  console.log(`    transform after prev:  "${transformAfterPrev}"`);
+
+  if (transformAfterPrev === transformAfterNext) {
+    findings.push(`FIX-2: FAIL — prev arrow did NOT change slider transform on ${locale}/${floorUid}`);
+  } else {
+    console.log(`    prev arrow: PASS (transform changed back)`);
+  }
+
+  // Screenshot
+  const navScreenPath = `${__dirname}/screenshots/accommodation/${locale}-lightbox-nav.png`;
+  await page.screenshot({ path: navScreenPath, fullPage: false });
+
+  await ctx.close();
+}
+
+// ── FIX-1: Lightbox popstate back/forward ──────────────────────────────────────
+async function testLightboxPopstate(browser, locale, floorUid, findings) {
+  console.log(`  [fix1-popstate] testing popstate for ${locale}/${floorUid}`);
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+  const page = await ctx.newPage();
+
+  const pageUrl = `${LOCAL_BASE}/${locale}/accommodation`;
+  await page.goto(pageUrl, { waitUntil: 'networkidle', timeout: 30000 });
+
+  const trigger = page.locator(`[data-behavior="lightbox"][data-lightbox-suffix="${floorUid}"]`).first();
+  if (await trigger.count() === 0) {
+    findings.push(`FIX-1 popstate: no trigger for uid=${floorUid} on ${locale}`);
+    await ctx.close();
+    return;
+  }
+
+  // Open lightbox (pushState adds /{uid})
+  await trigger.click();
+  await page.waitForTimeout(400);
+  const urlAfterOpen = page.url();
+  const openOk = urlAfterOpen.includes(`/${locale}/accommodation/${floorUid}`);
+  console.log(`    URL after open: ${urlAfterOpen} → ${openOk ? 'OK' : 'FAIL'}`);
+
+  // Browser back — should pop URL and close lightbox
+  await page.goBack();
+  await page.waitForTimeout(400);
+  const urlAfterBack = page.url();
+  const backUrlOk = urlAfterBack.endsWith(`/${locale}/accommodation`) || urlAfterBack.endsWith(`/${locale}/accommodation/`);
+  const lightboxAfterBack = await page.locator('.our-lightbox__container').count();
+  console.log(`    URL after back: ${urlAfterBack} → ${backUrlOk ? 'OK' : 'FAIL'}`);
+  console.log(`    Lightbox open after back: ${lightboxAfterBack > 0}`);
+
+  if (!backUrlOk) {
+    findings.push(`FIX-1 popstate: back did not restore base URL — got "${urlAfterBack}"`);
+  }
+  if (lightboxAfterBack > 0) {
+    findings.push(`FIX-1 popstate: lightbox still open after browser back on ${locale}`);
+  }
+
+  // Browser forward — should push URL and re-open lightbox
+  await page.goForward();
+  await page.waitForTimeout(400);
+  const urlAfterForward = page.url();
+  const forwardUrlOk = urlAfterForward.includes(`/${locale}/accommodation/${floorUid}`);
+  const lightboxAfterForward = await page.locator('.our-lightbox__container').count();
+  console.log(`    URL after forward: ${urlAfterForward} → ${forwardUrlOk ? 'OK' : 'FAIL'}`);
+  console.log(`    Lightbox open after forward: ${lightboxAfterForward > 0}`);
+
+  if (!forwardUrlOk) {
+    findings.push(`FIX-1 popstate: forward did not restore uid URL — got "${urlAfterForward}"`);
+  }
+  if (lightboxAfterForward === 0) {
+    findings.push(`FIX-1 popstate: lightbox did NOT re-open after browser forward on ${locale}`);
+  }
+
+  await ctx.close();
 }
 
 // ── Lightbox URL behaviour test ────────────────────────────────────────────────
@@ -432,6 +629,90 @@ async function checkLocale(browser, localeInfo, report) {
       if (!localStruct.hasFloors) localFindings.push('FLOORS: [data-behavior="floors"] absent');
       else console.log(`  [desktop] floors lightbox fragments: ${localStruct.floorsLightboxCount} (uids: ${localStruct.floorUids.join(', ')})`);
 
+      // FIX-3: Floors section wrapper — floor block must be inside .section > .section__inner
+      if (localStruct.hasFloors) {
+        if (!localStruct.floorsSectionWrapper) {
+          localFindings.push('FIX-3 FAIL: floors block has no .section wrapper — section title and spy-enter-viewport transitions absent');
+        } else if (!localStruct.floorsHasSectionInner) {
+          localFindings.push('FIX-3 FAIL: floors block has .section but no .section__inner wrapper');
+        } else {
+          console.log(`  [desktop] FIX-3: floors section wrapper present ✓`);
+        }
+        // Check the floors section title appears in sectionTitles list
+        const floorsTitleTexts = ['Schedule of availability', 'Disponibilités', 'Beschikbaarheid'];
+        const hasFloorsTitle = localStruct.sectionTitles.some(
+          (t) => floorsTitleTexts.includes(t.text)
+        );
+        if (!hasFloorsTitle) {
+          localFindings.push(`FIX-3 FAIL: floors section__title not found in page (expected one of ${JSON.stringify(floorsTitleTexts)})`);
+        } else {
+          const floorsTitleEl = localStruct.sectionTitles.find((t) => floorsTitleTexts.includes(t.text));
+          console.log(`  [desktop] FIX-3: floors section__title "${floorsTitleEl.text}" (${floorsTitleEl.tag}) ✓`);
+        }
+      }
+
+      // FIX-4: Info block show_title flags.
+      // DOM order: index 0 = "Specifications details" (show_title=false → no title, no images)
+      //            index 1 = "Other Features" (show_title=true → has title + SVG images)
+      if (localStruct.infoBlocks && localStruct.infoBlocks.length >= 2) {
+        const specsInfo = localStruct.infoBlocks[0]; // Specifications details
+        const featuresInfo = localStruct.infoBlocks[1]; // Other Features
+        // Specs block must have NO title (show_title=false)
+        if (specsInfo.title) {
+          localFindings.push(`FIX-4 FAIL: "Specifications details" info block shows title "${specsInfo.title}" — show_title should be false`);
+        } else {
+          console.log(`  [desktop] FIX-4: "Specifications details" has no title (show_title=false) ✓`);
+        }
+        // Features block must have a title (show_title=true)
+        if (!featuresInfo.title) {
+          localFindings.push('FIX-4 FAIL: "Other Features" info block has no title — show_title should be true');
+        } else {
+          console.log(`  [desktop] FIX-4: "Other Features" title="${featuresInfo.title}" ✓`);
+        }
+      } else if (localStruct.infoBlocks) {
+        localFindings.push(`FIX-4: expected 2 info blocks, found ${localStruct.infoBlocks.length}`);
+      }
+
+      // FIX-5: Slider figcaptions — all 10 gallery slides should have figcaption
+      if (localStruct.sliderFigcaptions !== undefined) {
+        const captionCount = localStruct.sliderFigcaptions.length;
+        const expectedCaptionCount = 10;
+        if (captionCount === 0) {
+          localFindings.push(`FIX-5 FAIL: no slider figcaptions found — caption field not populated in ETL`);
+        } else if (captionCount < expectedCaptionCount) {
+          localFindings.push(`FIX-5 FAIL: only ${captionCount}/${expectedCaptionCount} slides have figcaptions`);
+        } else {
+          // Verify the text matches expected attribution
+          const wrongCaptions = localStruct.sliderFigcaptions.filter(
+            (c) => !c.includes('Gianluca Di Fabio')
+          );
+          if (wrongCaptions.length) {
+            localFindings.push(`FIX-5 FAIL: ${wrongCaptions.length} figcaptions have unexpected text (expected "© Gianluca Di Fabio Architects")`);
+          } else {
+            console.log(`  [desktop] FIX-5: all ${captionCount} slider figcaptions present with correct text ✓`);
+          }
+        }
+      }
+
+      // FIX-6: Info SVG icons — "Other Features" block (index 1) should have 3 SVG images
+      if (localStruct.infoBlocks && localStruct.infoBlocks.length >= 2) {
+        const featuresInfo = localStruct.infoBlocks[1]; // Other Features
+        if (!featuresInfo.hasImages) {
+          localFindings.push('FIX-6 FAIL: "Other Features" info block has no images — SVG icons missing');
+        } else {
+          const svgIconCount = featuresInfo.imageSrcs.length;
+          const brokenSrcs = featuresInfo.imageSrcs.filter((s) => !s || s.trim() === '');
+          console.log(`  [desktop] FIX-6: ${svgIconCount} SVG icons present: ${featuresInfo.imageSrcs.map(s => s.split('/').pop()).join(', ')}`);
+          if (brokenSrcs.length) {
+            localFindings.push(`FIX-6 FAIL: ${brokenSrcs.length} info images have empty/null src`);
+          } else if (svgIconCount !== 3) {
+            localFindings.push(`FIX-6: expected 3 SVG icons in "Other Features", found ${svgIconCount}`);
+          } else {
+            console.log(`  [desktop] FIX-6: all 3 SVG icons present ✓`);
+          }
+        }
+      }
+
       // LANG SWITCHER
       const localHrefMap = {};
       for (const link of localStruct.langLinks) {
@@ -487,13 +768,27 @@ async function main() {
   const frUid = 'uid-9b68e793';
   const nlUid = 'uid-c2579ab3';
 
-  console.log('\n=== Lightbox URL behaviour tests ===');
+  console.log('\n=== Lightbox URL behaviour tests (FIX-1) ===');
   // Observe live behaviour first
   await observeLiveLightboxUrl(browser, 'en', enUid, lightboxFindings);
-  // Test rebuilt
+  // Test rebuilt — open/close URL behaviour
   await testLightboxUrlBehaviour(browser, 'en', enUid, lightboxFindings);
   await testLightboxUrlBehaviour(browser, 'fr', frUid, lightboxFindings);
   await testLightboxUrlBehaviour(browser, 'nl', nlUid, lightboxFindings);
+
+  console.log('\n=== Lightbox popstate back/forward (FIX-1) ===');
+  const popstatefindings = [];
+  await testLightboxPopstate(browser, 'en', enUid, popstatefindings);
+  for (const f of popstatefindings) console.log(`  ${f}`);
+
+  console.log('\n=== Lightbox slider prev/next (FIX-2) ===');
+  const fix2Findings = [];
+  // Use a floor uid that has multiple images; en uid=22 is the first floor — try it,
+  // then fall back to a later floor that we know has multiple images.
+  // We'll test all three locales' first floor uid.
+  await testLightboxSliderNavigation(browser, 'en', enUid, fix2Findings);
+  await testLightboxSliderNavigation(browser, 'fr', frUid, fix2Findings);
+  await testLightboxSliderNavigation(browser, 'nl', nlUid, fix2Findings);
 
   console.log('\n=== Deep-link cold-load tests ===');
   await testDeepLinkColdLoad(browser, 'en', enUid, deepLinkFindings);
@@ -518,11 +813,25 @@ async function main() {
     }
   }
 
-  console.log('\n--- Lightbox URL behaviour ---');
+  console.log('\n--- FIX-1: Lightbox URL open/close ---');
   const infoOnly = lightboxFindings.filter((f) => f.startsWith('LIVE LIGHTBOX OBSERVE (info)'));
   const lbFails = lightboxFindings.filter((f) => !f.startsWith('LIVE LIGHTBOX OBSERVE (info)'));
   for (const f of infoOnly) console.log(`  ${f}`);
+  if (lbFails.length === 0) console.log('  PASS: open/close URL behaviour correct on all locales');
   for (const f of lbFails) { console.log(`  FAIL: ${f}`); overallPass = false; }
+
+  console.log('\n--- FIX-1: Lightbox popstate back/forward ---');
+  const popstateFails = popstatefindings.filter((f) => f.includes('FAIL'));
+  if (popstateFails.length === 0 && popstatefindings.length > 0) console.log('  PASS: popstate back/forward correct');
+  else if (popstatefindings.length === 0) console.log('  (no popstate findings)');
+  for (const f of popstateFails) { console.log(`  FAIL: ${f}`); overallPass = false; }
+
+  console.log('\n--- FIX-2: Lightbox slider prev/next navigation ---');
+  const fix2Fails = fix2Findings.filter((f) => f.startsWith('FIX-2: FAIL'));
+  const fix2Info = fix2Findings.filter((f) => !f.startsWith('FIX-2: FAIL'));
+  for (const f of fix2Info) console.log(`  INFO: ${f}`);
+  if (fix2Fails.length === 0) console.log('  PASS: lightbox prev/next arrows navigate correctly');
+  for (const f of fix2Fails) { console.log(`  FAIL: ${f}`); overallPass = false; }
 
   console.log('\n--- Deep-link cold-load ---');
   for (const f of deepLinkFindings) {
@@ -539,6 +848,8 @@ async function main() {
     timestamp: new Date().toISOString(),
     locales: report,
     lightboxUrlBehaviour: { lbFails, infoOnly },
+    fix1Popstate: popstatefindings,
+    fix2LightboxNav: fix2Findings,
     deepLinkColdLoad: deepLinkFindings,
   };
   const reportPath = path.join(SCREENSHOTS_DIR, 'report.json');

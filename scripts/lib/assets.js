@@ -1,4 +1,30 @@
 import { readFile, writeFile } from 'node:fs/promises';
+import { extname } from 'node:path';
+
+// Extension → MIME map for types whose legacy CMS records have null MimeType.
+// Keep application/octet-stream as the final fallback only when the extension is unknown.
+const EXT_MIME = {
+  '.svg':  'image/svg+xml',
+  '.png':  'image/png',
+  '.jpg':  'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif':  'image/gif',
+  '.webp': 'image/webp',
+};
+
+/**
+ * Derives a MIME type from a filename when the source record has no MimeType.
+ * If MimeType is present and non-empty, it is returned unchanged.
+ *
+ * @param {string|null|undefined} mimeType
+ * @param {string} filename
+ * @returns {string}
+ */
+function resolveMimeType(mimeType, filename) {
+  if (mimeType) return mimeType;
+  const ext = extname(filename ?? '').toLowerCase();
+  return EXT_MIME[ext] ?? 'application/octet-stream';
+}
 
 export class AssetResolutionError extends Error {
   constructor(message) {
@@ -38,7 +64,7 @@ export async function resolveAssets(fileRefs, manifest, { fetchBytes, upload, ve
 
   for (const ref of fileRefs) {
     const { Id, Legend: altText, Name: filename, Src: src } = ref;
-    const mimeType = ref.MimeType ?? 'application/octet-stream';
+    const mimeType = resolveMimeType(ref.MimeType, filename ?? src);
 
     if (ids.has(Id)) {
       // already processed this Id in this run — reuse without incrementing reused again
