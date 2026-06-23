@@ -68,7 +68,20 @@ Hero + meta fields on the type; `blocks` dynamic zone.
 | `slug` | | uid/text | L | translated per locale; drives routing — issue #24 |
 | `blocks` | | dynamic zone | L | allows: `blocks.paragraph`, `blocks.paragraph-image`, `blocks.building`, `blocks.partners`; forced deviation #5 (must be explicitly localized) |
 
-_(repeat a block like this for: Accommodation, Services, Location, Home)_
+_(repeat a block like this for: Services, Location, Home)_
+
+### Accommodation  ← C# `Accommodation` (`old/Models/Accommodation.cs`)
+Hero + meta fields on the type; `blocks` dynamic zone.
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `title` | `Title` | text (multiline) | L | `[Text(Multiline = true, Localized = true)]` |
+| `hero` | `Hero` | text (multiline) | L | `[Text(Legend = "Titre Cover", Multiline = true, Localized = true)]` |
+| `image` | `Image` | media (single, images only) | N | `[Picture(Localized = false)]` |
+| `browser_title` | `BrowserTitle` | string | L | `[Text(Localized = true)]` |
+| `google_description` | `GoogleDescription` | text (multiline) | L | `[Text(Multiline = true, Localized = true)]` |
+| `footer_title` | _(none)_ | string | L | **Forced deviation** — absent from `Accommodation.cs`; no C# origin. Included for operational consistency: all multi-block page single-types expose `footer_title` so editors have a uniform experience. Mirrors Building pattern (issue #20). |
+| `blocks` | `[ParentOf(PanelText, PanelSlider, PanelInfo, PanelFloors)]` | dynamic zone | L | allows: `blocks.paragraph`, `blocks.slider`, `blocks.info`, `blocks.floors`; forced deviation #5 (must be explicitly localized) |
 
 ### Contact ← C# `Contact`
 

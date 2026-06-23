@@ -213,3 +213,68 @@ export async function fetchContact(locale: string): Promise<ContactData> {
   const { data } = await res.json();
   return data as ContactData;
 }
+
+// Accommodation types
+export interface SlideImageData {
+  __component: "blocks.slide-image";
+  image: (MediaRef & { caption: string | null }) | null;
+}
+
+export interface SlideTextData {
+  __component: "blocks.slide-text";
+  text: string | null;
+}
+
+export interface InfoItemData {
+  image: MediaRef | null;
+  text: string | null;
+}
+
+export type AccommodationBlock =
+  | { __component: "blocks.paragraph"; show: boolean; show_title: boolean; background_color: BgColor; title: string | null; text: string | null }
+  | { __component: "blocks.slider"; show: boolean; show_title: boolean; background_color: BgColor; title: string | null; slides: (SlideImageData | SlideTextData)[] }
+  | { __component: "blocks.info"; show: boolean; show_title: boolean; background_color: BgColor; title: string | null; items: InfoItemData[] }
+  | { __component: "blocks.floors"; show: boolean; show_title: boolean; background_color: BgColor; title: string | null; intro_title: string | null; caption: string | null; floors: FloorItemData[] };
+
+export interface AccommodationData {
+  title: string | null;
+  hero: string | null;
+  image: MediaRef | null;
+  browser_title: string | null;
+  google_description: string | null;
+  footer_title: string | null;
+  blocks: AccommodationBlock[];
+}
+
+export async function fetchAccommodation(locale: string): Promise<AccommodationData> {
+  const base = import.meta.env.STRAPI_URL;
+  const token = import.meta.env.STRAPI_TOKEN;
+
+  if (!base) throw new Error("STRAPI_URL is not set");
+
+  const url = new URL("/api/accommodation", base);
+  url.searchParams.set("locale", locale);
+  const populate: Record<string, string> = {
+    "populate[image]": "true",
+    "populate[blocks][on][blocks.paragraph][populate]": "*",
+    "populate[blocks][on][blocks.slider][populate][slides][on][blocks.slide-image][populate][image]": "true",
+    "populate[blocks][on][blocks.slider][populate][slides][on][blocks.slide-text][populate]": "*",
+    "populate[blocks][on][blocks.info][populate][items][populate][image]": "true",
+    "populate[blocks][on][blocks.floors][populate][floors][populate][images]": "true",
+  };
+  for (const [k, v] of Object.entries(populate)) url.searchParams.set(k, v);
+
+  const headers: Record<string, string> = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const res = await fetch(url.toString(), { headers });
+
+  if (!res.ok) {
+    throw new Error(
+      `Failed to fetch Accommodation [${locale}]: ${res.status} ${res.statusText}`,
+    );
+  }
+
+  const { data } = await res.json();
+  return data as AccommodationData;
+}

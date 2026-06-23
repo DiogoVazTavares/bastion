@@ -18,9 +18,10 @@ interface Props {
   intro_title: string | null;
   caption: string | null;
   floors: FloorItem[];
+  autoOpenUid?: string;
 }
 
-const { show, background_color, intro_title, caption, floors } = Astro.props;
+const { show, background_color, intro_title, caption, floors, autoOpenUid } = Astro.props;
 
 const bgClass: Record<string, string> = {
   Lightgray: "section--bg-light-gray",
@@ -65,7 +66,7 @@ const hasImages = (f: FloorItem) => Boolean(f.uid && f.images.length > 0);
 
 {
   show && (
-    <div class={outerClass} data-behavior="floors">
+    <div class={outerClass} data-behavior="floors" data-autoopen-uid={autoOpenUid ?? undefined}>
       <div class="floors__intro">
         <Fragment set:html={intro_title ?? ""} />
       </div>
@@ -253,9 +254,14 @@ const hasImages = (f: FloorItem) => Boolean(f.uid && f.images.length > 0);
 <script>
   // Island lightbox: open a floor's embedded gallery on click, reuse the ported Slider
   // for image navigation. No network round-trip (see docs/decisions.md 2026-06-23).
+  // Deep-link support added for issue #20: pushState on open, replaceState on close.
   import { Discover as DiscoverSliders } from "../../scripts/Slider";
 
   function closeLightbox() {
+    // Pop the uid suffix from the URL if we pushed one.
+    if ((history.state as any)?.lightboxUid) {
+      history.replaceState({}, "", ".");
+    }
     const container = document.querySelector(".our-lightbox__container");
     const bg = document.querySelector(".our-lightbox__bg");
     if (container) container.remove();
@@ -294,6 +300,10 @@ const hasImages = (f: FloorItem) => Boolean(f.uid && f.images.length > 0);
 
     // Initialise the cloned slider (Discover only picks up un-initialised sliders).
     DiscoverSliders();
+
+    // Push the floor's uid as a URL suffix for shareability (mirrors legacy HistoryManager).
+    const suffix = source.getAttribute("data-lightbox-id");
+    if (suffix) history.pushState({ lightboxUid: suffix }, "", suffix);
   }
 
   function init() {
@@ -319,6 +329,13 @@ const hasImages = (f: FloorItem) => Boolean(f.uid && f.images.length > 0);
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") closeLightbox();
     });
+
+    // Auto-open on cold load if the page was reached via a uid deep-link.
+    const floorsEl = document.querySelector("[data-behavior='floors']");
+    const autoUid = floorsEl?.getAttribute("data-autoopen-uid");
+    if (autoUid && lightboxesByUid.has(autoUid)) {
+      openLightbox(lightboxesByUid.get(autoUid)!);
+    }
   }
 
   init();

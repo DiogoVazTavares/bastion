@@ -1,0 +1,46 @@
+---
+import type { GetStaticPaths, InferGetStaticPropsType } from "astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Hero from "../../components/Hero.astro";
+import Paragraph from "../../components/blocks/Paragraph.astro";
+import Slider from "../../components/blocks/Slider.astro";
+import Info from "../../components/blocks/Info.astro";
+import Floors from "../../components/blocks/Floors.astro";
+import { fetchAccommodation } from "../../lib/strapi";
+
+export const getStaticPaths = (async () => {
+  const locales = ["en", "fr", "nl"];
+
+  const pages = await Promise.all(
+    locales.map(async (locale) => {
+      const accommodation = await fetchAccommodation(locale);
+      return { params: { locale }, props: { accommodation, locale } };
+    }),
+  );
+
+  return pages;
+}) satisfies GetStaticPaths;
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+
+const { accommodation, locale } = Astro.props;
+---
+
+<BaseLayout
+  title={accommodation.browser_title ?? accommodation.title ?? undefined}
+  description={accommodation.google_description ?? undefined}
+  locale={locale}
+  currentSlug="accommodation"
+>
+  <Hero title={accommodation.hero} image={accommodation.image} video={null} />
+  <div id="content" tabindex="-1"></div>
+  {
+    accommodation.blocks.map((block: any) => {
+      if (block.__component === "blocks.paragraph") return <Paragraph {...block} />;
+      if (block.__component === "blocks.slider")   return <Slider {...block} />;
+      if (block.__component === "blocks.info")     return <Info {...block} />;
+      if (block.__component === "blocks.floors")   return <Floors {...block} />;
+      return null;
+    })
+  }
+</BaseLayout>
