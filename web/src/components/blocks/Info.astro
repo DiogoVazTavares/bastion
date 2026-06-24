@@ -34,7 +34,10 @@ const sectionClass = ["section", bgClass[background_color]]
               <div class="info__item">
                 {item.image && (
                   <div class="info__image">
-                    <img src={item.image.url} alt={item.image.alternativeText ?? ""} />
+                    <img
+                      src={item.image.url}
+                      alt={item.image.alternativeText ?? ""}
+                    />
                   </div>
                 )}
                 <div class="info__text">

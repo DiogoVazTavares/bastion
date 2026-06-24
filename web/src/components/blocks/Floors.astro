@@ -213,15 +213,15 @@ const hasImages = (f: FloorItem) => Boolean(f.uid && f.images.length > 0);
 <script is:inline>
   // Global helpers referenced by inline SVG attributes (onload / onmouseover / onmouseout).
   function place() {
-    var elts = document.querySelectorAll(".floors__floor");
-    for (var i = 0; i < elts.length; i++) {
-      var elt = elts[i];
-      var id = elt.id;
-      var parent = document.getElementById("Layer_1");
-      var top =
+    const elts = document.querySelectorAll(".floors__floor");
+    for (let i = 0; i < elts.length; i++) {
+      const elt = elts[i];
+      const id = elt.id;
+      const parent = document.getElementById("Layer_1");
+      const top =
         elt.getBoundingClientRect().top - parent.getBoundingClientRect().top;
-      var legends = document.querySelectorAll("*[data-rect-id='" + id + "']");
-      var l = legends.length;
+      const legends = document.querySelectorAll("*[data-rect-id='" + id + "']");
+      let l = legends.length;
       while (l--) {
         legends[l].style.top = top + "px";
       }
@@ -229,12 +229,12 @@ const hasImages = (f: FloorItem) => Boolean(f.uid && f.images.length > 0);
   }
 
   function overfloor(id) {
-    var elt = document.getElementById(id);
-    var parent = document.getElementById("Layer_1");
-    var top =
+    const elt = document.getElementById(id);
+    const parent = document.getElementById("Layer_1");
+    const top =
       elt.getBoundingClientRect().top - parent.getBoundingClientRect().top;
-    var legends = document.querySelectorAll("*[data-rect-id='" + id + "']");
-    var l = legends.length;
+    const legends = document.querySelectorAll("*[data-rect-id='" + id + "']");
+    let l = legends.length;
     while (l--) {
       legends[l].classList.add("floors__floor-legend--active");
       legends[l].style.top = top + "px";
@@ -242,8 +242,8 @@ const hasImages = (f: FloorItem) => Boolean(f.uid && f.images.length > 0);
   }
 
   function outfloor(id) {
-    var legends = document.querySelectorAll("*[data-rect-id='" + id + "']");
-    var l = legends.length;
+    const legends = document.querySelectorAll("*[data-rect-id='" + id + "']");
+    let l = legends.length;
     while (l--) {
       legends[l].classList.remove("floors__floor-legend--active");
     }
