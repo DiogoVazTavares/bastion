@@ -14,9 +14,23 @@ pre-commit:
       glob: '*.{ts,tsx,js,jsx,json,jsonc}'
       run: npx biome check --write --no-errors-on-unmatched {staged_files}
       stage_fixed: true
+    web-format:
+      # .less is formatted here (Prettier), never linted — legacy immutable source.
+      root: 'web/'
+      glob: '*.{ts,tsx,js,mjs,cjs,jsx,astro,json,less}'
+      run: pnpm exec prettier --write {staged_files}
+      stage_fixed: true
+    web-lint:
+      root: 'web/'
+      glob: '*.{ts,tsx,js,mjs,cjs,jsx,astro}'
+      run: pnpm exec eslint --fix --max-warnings=0 {staged_files}
+      stage_fixed: true
 
 pre-push:
   commands:
     cms-typecheck:
       root: 'cms/'
       run: npm run typecheck
+    web-typecheck:
+      root: 'web/'
+      run: pnpm run typecheck

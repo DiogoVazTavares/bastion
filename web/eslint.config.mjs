@@ -17,4 +17,14 @@ export default [
     ...config,
     files: ["**/*.{ts,tsx,mjs,cjs,js,jsx}"],
   })),
+  {
+    files: ["**/*.{ts,tsx,mjs,cjs,js,jsx}"],
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
+      "@typescript-eslint/no-explicit-any": "error",
+    },
+  },
 ];
