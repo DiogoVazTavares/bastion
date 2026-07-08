@@ -57,7 +57,12 @@ const blockDirections = building.blocks.map((block: any) => {
         return <Paragraph {...block} />;
       }
       if (block.__component === "blocks.paragraph-image") {
-        return <ParagraphImage {...block} direction={blockDirections[i] as "left" | "right"} />;
+        return (
+          <ParagraphImage
+            {...block}
+            direction={blockDirections[i] as "left" | "right"}
+          />
+        );
       }
       if (block.__component === "blocks.building") {
         return <BuildingBlock {...block} />;

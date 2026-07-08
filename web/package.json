@@ -11,10 +11,12 @@
     "preview": "astro preview",
     "astro": "astro",
     "typecheck": "astro check",
-    "lint": "eslint . && stylelint \"src/**/*.less\"",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "check": "astro check && eslint . && prettier --check ."
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix --max-warnings=0",
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
+    "check": "pnpm run typecheck && pnpm run lint && pnpm run format",
+    "fix": "eslint . --fix ; prettier --write ."
   },
   "dependencies": {
     "astro": "^6.4.6",
@@ -28,9 +30,13 @@
     "less": "^4.6.4",
     "prettier": "^3.8.4",
     "prettier-plugin-astro": "^0.14.1",
-    "stylelint": "^17.13.0",
-    "stylelint-config-standard-less": "^4.1.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.61.1"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp"
+    ]
   }
 }

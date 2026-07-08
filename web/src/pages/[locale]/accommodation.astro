@@ -36,10 +36,11 @@ const { accommodation, locale } = Astro.props;
   <div id="content" tabindex="-1"></div>
   {
     accommodation.blocks.map((block: any) => {
-      if (block.__component === "blocks.paragraph") return <Paragraph {...block} />;
-      if (block.__component === "blocks.slider")   return <Slider {...block} />;
-      if (block.__component === "blocks.info")     return <Info {...block} />;
-      if (block.__component === "blocks.floors")   return <Floors {...block} />;
+      if (block.__component === "blocks.paragraph")
+        return <Paragraph {...block} />;
+      if (block.__component === "blocks.slider") return <Slider {...block} />;
+      if (block.__component === "blocks.info") return <Info {...block} />;
+      if (block.__component === "blocks.floors") return <Floors {...block} />;
       return null;
     })
   }

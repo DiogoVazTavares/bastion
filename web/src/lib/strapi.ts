@@ -231,10 +231,40 @@ export interface InfoItemData {
 }
 
 export type AccommodationBlock =
-  | { __component: "blocks.paragraph"; show: boolean; show_title: boolean; background_color: BgColor; title: string | null; text: string | null }
-  | { __component: "blocks.slider"; show: boolean; show_title: boolean; background_color: BgColor; title: string | null; slides: (SlideImageData | SlideTextData)[] }
-  | { __component: "blocks.info"; show: boolean; show_title: boolean; background_color: BgColor; title: string | null; items: InfoItemData[] }
-  | { __component: "blocks.floors"; show: boolean; show_title: boolean; background_color: BgColor; title: string | null; intro_title: string | null; caption: string | null; floors: FloorItemData[] };
+  | {
+      __component: "blocks.paragraph";
+      show: boolean;
+      show_title: boolean;
+      background_color: BgColor;
+      title: string | null;
+      text: string | null;
+    }
+  | {
+      __component: "blocks.slider";
+      show: boolean;
+      show_title: boolean;
+      background_color: BgColor;
+      title: string | null;
+      slides: (SlideImageData | SlideTextData)[];
+    }
+  | {
+      __component: "blocks.info";
+      show: boolean;
+      show_title: boolean;
+      background_color: BgColor;
+      title: string | null;
+      items: InfoItemData[];
+    }
+  | {
+      __component: "blocks.floors";
+      show: boolean;
+      show_title: boolean;
+      background_color: BgColor;
+      title: string | null;
+      intro_title: string | null;
+      caption: string | null;
+      floors: FloorItemData[];
+    };
 
 export interface AccommodationData {
   title: string | null;
@@ -246,7 +276,9 @@ export interface AccommodationData {
   blocks: AccommodationBlock[];
 }
 
-export async function fetchAccommodation(locale: string): Promise<AccommodationData> {
+export async function fetchAccommodation(
+  locale: string,
+): Promise<AccommodationData> {
   const base = import.meta.env.STRAPI_URL;
   const token = import.meta.env.STRAPI_TOKEN;
 
@@ -257,10 +289,14 @@ export async function fetchAccommodation(locale: string): Promise<AccommodationD
   const populate: Record<string, string> = {
     "populate[image]": "true",
     "populate[blocks][on][blocks.paragraph][populate]": "*",
-    "populate[blocks][on][blocks.slider][populate][slides][on][blocks.slide-image][populate][image]": "true",
-    "populate[blocks][on][blocks.slider][populate][slides][on][blocks.slide-text][populate]": "*",
-    "populate[blocks][on][blocks.info][populate][items][populate][image]": "true",
-    "populate[blocks][on][blocks.floors][populate][floors][populate][images]": "true",
+    "populate[blocks][on][blocks.slider][populate][slides][on][blocks.slide-image][populate][image]":
+      "true",
+    "populate[blocks][on][blocks.slider][populate][slides][on][blocks.slide-text][populate]":
+      "*",
+    "populate[blocks][on][blocks.info][populate][items][populate][image]":
+      "true",
+    "populate[blocks][on][blocks.floors][populate][floors][populate][images]":
+      "true",
   };
   for (const [k, v] of Object.entries(populate)) url.searchParams.set(k, v);
 

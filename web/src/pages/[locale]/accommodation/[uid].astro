@@ -14,7 +14,7 @@ export const getStaticPaths = (async () => {
   for (const locale of locales) {
     const accommodation = await fetchAccommodation(locale);
     const floorsBlock = accommodation.blocks.find(
-      (b: any) => b.__component === "blocks.floors"
+      (b: any) => b.__component === "blocks.floors",
     ) as any;
     const floors = floorsBlock?.floors ?? [];
     for (const floor of floors) {
@@ -43,10 +43,12 @@ const { accommodation, locale, autoOpenUid } = Astro.props;
   <div id="content" tabindex="-1"></div>
   {
     accommodation.blocks.map((block: any) => {
-      if (block.__component === "blocks.paragraph") return <Paragraph {...block} />;
-      if (block.__component === "blocks.slider")   return <Slider {...block} />;
-      if (block.__component === "blocks.info")     return <Info {...block} />;
-      if (block.__component === "blocks.floors")   return <Floors {...block} autoOpenUid={autoOpenUid} />;
+      if (block.__component === "blocks.paragraph")
+        return <Paragraph {...block} />;
+      if (block.__component === "blocks.slider") return <Slider {...block} />;
+      if (block.__component === "blocks.info") return <Info {...block} />;
+      if (block.__component === "blocks.floors")
+        return <Floors {...block} autoOpenUid={autoOpenUid} />;
       return null;
     })
   }
