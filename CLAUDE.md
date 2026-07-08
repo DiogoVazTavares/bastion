@@ -110,5 +110,22 @@ dependencies, dispatches to the agents in order, verifies against the acceptance
 and opens a **PR per issue** (`Closes #N`, criteria checklist, parity evidence). The human
 is the merge gate. Verification runs against Cloudflare Pages **preview deploys**.
 
+## Branching & release
+
+- **`develop`** is the integration trunk and the **GitHub default branch**. Every issue PR
+  targets `develop`; because it is the default branch, merging a PR that says `Closes #N`
+  **auto-closes** the issue. (Historically PRs merged to `develop` while the default was
+  `main`, so `Closes #N` never fired and issues had to be closed by hand — that is the reason
+  the default was moved to `develop`.)
+- **`main`** is the **production branch**. It is deployed, not developed on: Cloudflare Pages
+  (Astro site) and Strapi Cloud (CMS) each pin their production build to `main` in their own
+  dashboards — a stored branch name, independent of the GitHub default. Non-`main` branches
+  (incl. `develop`) produce **preview** deploys only.
+- **Release = a `develop → main` PR.** Merging it triggers the production Strapi/Astro/
+  Cloudflare builds and is when the full ETL re-runs before DNS cutover (see Migration rules).
+  Issues are already closed by their develop merge, so this PR closes nothing new.
+- If you change the GitHub default branch, **re-confirm** Cloudflare's *Production branch* and
+  Strapi Cloud's connected branch are still explicitly `main` (they do not track the default).
+
 
 While talking to me, be extremely concise. Sacrifice grammar for the sake of concision.
