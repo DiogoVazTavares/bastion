@@ -1,7 +1,7 @@
 ---
-import '../styles/index.less';
-import SiteHeader from '../components/SiteHeader.astro';
-import { fetchContact, fetchTerms, fetchCredits } from '../lib/strapi';
+import "../styles/index.less";
+import SiteHeader from "../components/SiteHeader.astro";
+import { fetchContact, fetchTerms, fetchCredits } from "../lib/strapi";
 
 interface Props {
   title?: string;
@@ -11,7 +11,13 @@ interface Props {
   currentSlug?: string;
 }
 
-const { title = 'Bastion Tower', description, locale = 'en', greenMenu = false, currentSlug } = Astro.props;
+const {
+  title = "Bastion Tower",
+  description,
+  locale = "en",
+  greenMenu = false,
+  currentSlug,
+} = Astro.props;
 
 const [contact, terms, credits] = await Promise.all([
   fetchContact(locale),
@@ -33,7 +39,11 @@ const [contact, terms, credits] = await Promise.all([
   </head>
   <body>
     <div class="container">
-      <SiteHeader locale={locale} greenMenu={greenMenu} currentSlug={currentSlug} />
+      <SiteHeader
+        locale={locale}
+        greenMenu={greenMenu}
+        currentSlug={currentSlug}
+      />
       <slot />
       <section class="section section--bg-green">
         <div class="contact section__inner" id="contact">
@@ -41,17 +51,67 @@ const [contact, terms, credits] = await Promise.all([
             {contact.title}
           </h1>
           <div class="contact__text">
-            <Fragment set:html={contact.text ?? ''} />
-            <a href="javascript:void(9)" class="icon icon--arrow-circle-top contact__button contact__button--rouded" data-behavior="scroll-to-top" aria-label="Scroll to top"></a>
+            <Fragment set:html={contact.text ?? ""} />
+            <a
+              href="javascript:void(9)"
+              class="icon icon--arrow-circle-top contact__button contact__button--rouded"
+              data-behavior="scroll-to-top"
+              aria-label="Scroll to top"></a>
           </div>
         </div>
       </section>
       <footer class="footer">
         <div class="footer__inner">
-          <a href={`/${locale}/terms`} class="footer__link">{terms.footer_title}</a>
-          {credits && <a href={`/${locale}/credits`} class="footer__link">{credits.footer_title}</a>}
+          <a href={`/${locale}/terms`} class="footer__link"
+            >{terms.footer_title}</a
+          >
+          {
+            credits && (
+              <a href={`/${locale}/credits`} class="footer__link">
+                {credits.footer_title}
+              </a>
+            )
+          }
         </div>
       </footer>
     </div>
+    <script is:inline>
+      document.addEventListener("DOMContentLoaded", function () {
+        // --- ScrollSpy ---
+        const enterEls = document.querySelectorAll("[data-spy-enter-viewport]");
+        if (enterEls.length) {
+          const enterObs = new IntersectionObserver(
+            function (entries, obs) {
+              entries.forEach(function (entry) {
+                if (!entry.isIntersecting) return;
+                entry.target.setAttribute("data-enter-viewport", "true");
+                obs.unobserve(entry.target);
+              });
+            },
+            { threshold: 0 },
+          );
+          enterEls.forEach(function (el) {
+            enterObs.observe(el);
+          });
+        }
+        const viewportEls = document.querySelectorAll("[data-spy-viewport]");
+        if (viewportEls.length) {
+          const viewportObs = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (entry) {
+                entry.target.setAttribute(
+                  "data-viewport",
+                  entry.isIntersecting ? "true" : "false",
+                );
+              });
+            },
+            { threshold: 0 },
+          );
+          viewportEls.forEach(function (el) {
+            viewportObs.observe(el);
+          });
+        }
+      });
+    </script>
   </body>
 </html>

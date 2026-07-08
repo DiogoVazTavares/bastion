@@ -7,31 +7,34 @@ interface Props {
 
 const { title, image, video } = Astro.props;
 
-const heroTitleHtml = title ? title.replace(/\n/g, '<br />') : null;
+const heroTitleHtml = title ? title.replace(/\n/g, "<br />") : null;
 ---
 
 <div class="main__hero hero" data-spy-viewport>
   <figure class="hero__figure">
-    {image && (
-      <img
-        class="hero__image"
-        srcset={`${image.url}?w=450 450w, ${image.url}?w=600 600w, ${image.url}?w=900 900w, ${image.url}?w=1200 1200w, ${image.url}?w=1500 1500w, ${image.url}?w=2000 2000w`}
-        sizes="100vw"
-        src={image.url}
-        alt={image.alternativeText ?? ''}
-      />
-    )}
-    {video && (
-      <video class="hero__video" src={video.url} autoplay loop muted></video>
-    )}
-    {(image || video) && (
-      <div class="hero__image-overlay"></div>
-    )}
-    {heroTitleHtml && (
-      <figcaption class="hero__title">
-        <Fragment set:html={heroTitleHtml} />
-      </figcaption>
-    )}
+    {
+      image && (
+        <img
+          class="hero__image"
+          srcset={`${image.url}?w=450 450w, ${image.url}?w=600 600w, ${image.url}?w=900 900w, ${image.url}?w=1200 1200w, ${image.url}?w=1500 1500w, ${image.url}?w=2000 2000w`}
+          sizes="100vw"
+          src={image.url}
+          alt={image.alternativeText ?? ""}
+        />
+      )
+    }
+    {video && <video class="hero__video" src={video.url} autoplay loop muted />}
+    {(image || video) && <div class="hero__image-overlay" />}
+    {
+      heroTitleHtml && (
+        <figcaption class="hero__title">
+          <Fragment set:html={heroTitleHtml} />
+        </figcaption>
+      )
+    }
   </figure>
-  <a class="icon icon--arrow-circle-bottom hero__button" href="#content" aria-label="Scroll to content"></a>
+  <a
+    class="icon icon--arrow-circle-bottom hero__button"
+    href="#content"
+    aria-label="Scroll to content"></a>
 </div>

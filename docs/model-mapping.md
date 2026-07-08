@@ -15,8 +15,14 @@ across locale variants).
 1. **Flattened inheritance.** Strapi components do not inherit. Shared C# base-class fields
    (e.g. `show`, `show_title`, `background_color`) are copied into every component that had
    them. Logged once here as a pattern; not repeated per block.
-2. **Polymorphic slider slides.** C# `List<SlideBase>` (image/text) → repeatable
-   `slider-slide` component with `kind: image | text` + union of fields. Preserves
+2. **Polymorphic slider slides — dynamic zone (revised 2026-06-22).** C# `PanelSlider`
+   holds a `List<ISlide>` where `SlideImage` and `SlideText` are the only two leaf types.
+   The two subtypes have genuinely disjoint field shapes (`image` vs HTML `text`), so a
+   dynamic zone of `blocks.slide-image` and `blocks.slide-text` is the natural 1:1 mapping
+   of the C# polymorphism — each slide type is its own component, ordered freely in the
+   zone. The earlier plan (a single `slider-slide` repeatable with a `kind` enum and a
+   union of fields) would have forced a merged schema with one field always null; a dynamic
+   zone avoids that and matches the C# inheritance structure more closely. Preserves
    mixed-type ordering.
 3. **Polymorphic service checkers.** C# subtypes (image-checker/icon-checker) → repeatable
    `service-checker` component with `kind: image | icon` + union of fields.
@@ -25,7 +31,24 @@ across locale variants).
    (`#153d86`) is navy blue — the class was always misnamed. Strapi enum uses `"Blue"` to match
    what editors see. The CSS class `section--bg-green` is kept for now and mapped at runtime;
    tracked for rename in `docs/site-wide-issues.md` (SW-4).
-5. _(add: nesting-depth limits, type coercions, naming changes, CKE5/HTML handling, …)_
+5. **`blocks` dynamic zones must be explicitly `localized: true` on all multi-block page single-types.**
+   Strapi v5 i18n treats a dynamic zone as non-localized unless explicitly opted in. Without the
+   annotation, `syncNonLocalizedAttributes` propagates the source locale's entire `blocks` payload
+   (including component rows) to all other locale variants after each PUT, wiping previously-written
+   locales' items. Fix: add `"pluginOptions": { "i18n": { "localized": true } }` to the `blocks`
+   attribute on every multi-block page schema. Applied to `building` (2026-06-17). Must also be
+   applied when Accommodation, Services, Location, and Home schemas are created.
+   Tracked in `docs/decisions.md` (2026-06-17).
+   _(Former deviation #5 — `building-item` image fields `localized:true` — was a workaround for a
+   symptom of this root cause; reverted below once the DZ was fixed.)_
+6. **`building-item` image fields reverted to `localized: false` (correction of former deviation #5).**
+   C# `PanelBuilding.Item.BigImage` and `SmallImage` carry `[Picture(Localized = false)]` — correctly
+   shared across locales. A prior workaround set them to `localized: true` to prevent an observed
+   ID-collision cascade, but the real root cause was the `blocks` DZ missing `localized: true`
+   (deviation #5 above). With the DZ now localized, `syncNonLocalizedAttributes` no longer touches
+   `blocks` at all, so the ID-collision path is gone. Both fields revert to `localized: false` as
+   the C# model specifies. Tracked in `docs/decisions.md` (2026-06-17).
+7. _(add: nesting-depth limits, type coercions, naming changes, CKE5/HTML handling, …)_
 
 ---
 
@@ -43,9 +66,22 @@ Hero + meta fields on the type; `blocks` dynamic zone.
 | `google_description` | `GoogleDescription` | text (multiline) | L | `[Text(Multiline = true, Localized = true)]` |
 | `footer_title` | _(none)_ | string | L | **Forced deviation** — absent from `Building.cs`; no C# origin. Included for operational consistency: all multi-block page single-types expose `footer_title` so editors have a uniform experience. Source of truth: issue #12. |
 | `slug` | | uid/text | L | translated per locale; drives routing — issue #24 |
-| `blocks` | | dynamic zone | — | allows: `blocks.paragraph`, `blocks.paragraph-image`, `blocks.building`, `blocks.partners` |
+| `blocks` | | dynamic zone | L | allows: `blocks.paragraph`, `blocks.paragraph-image`, `blocks.building`, `blocks.partners`; forced deviation #5 (must be explicitly localized) |
 
-_(repeat a block like this for: Accommodation, Services, Location, Home)_
+_(repeat a block like this for: Services, Location, Home)_
+
+### Accommodation  ← C# `Accommodation` (`old/Models/Accommodation.cs`)
+Hero + meta fields on the type; `blocks` dynamic zone.
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `title` | `Title` | text (multiline) | L | `[Text(Multiline = true, Localized = true)]` |
+| `hero` | `Hero` | text (multiline) | L | `[Text(Legend = "Titre Cover", Multiline = true, Localized = true)]` |
+| `image` | `Image` | media (single, images only) | N | `[Picture(Localized = false)]` |
+| `browser_title` | `BrowserTitle` | string | L | `[Text(Localized = true)]` |
+| `google_description` | `GoogleDescription` | text (multiline) | L | `[Text(Multiline = true, Localized = true)]` |
+| `footer_title` | _(none)_ | string | L | **Forced deviation** — absent from `Accommodation.cs`; no C# origin. Included for operational consistency: all multi-block page single-types expose `footer_title` so editors have a uniform experience. Mirrors Building pattern (issue #20). |
+| `blocks` | `[ParentOf(PanelText, PanelSlider, PanelInfo, PanelFloors)]` | dynamic zone | L | allows: `blocks.paragraph`, `blocks.slider`, `blocks.info`, `blocks.floors`; forced deviation #5 (must be explicitly localized) |
 
 ### Contact ← C# `Contact`
 
@@ -120,8 +156,8 @@ Full-width banner: title, cover text, image, optional video. _(field table TBD)_
 
 | Strapi field | C# property | Type | Localised | Notes |
 |---|---|---|---|---|
-| `big_image` | `BigImage` | media (single) | N | `[Picture(Legend = "Big Image", Localized = false)]`; uploaded to media library |
-| `small_image` | `SmallImage` | media (single) | N | `[Picture(Legend = "Small Image", Localized = false)]`; uploaded to media library |
+| `big_image` | `BigImage` | media (single) | N | `[Picture(Legend = "Big Image", Localized = false)]`; reverted to N — former workaround (deviation #5 was misdiagnosed; real fix is DZ `localized:true`, deviation #5) |
+| `small_image` | `SmallImage` | media (single) | N | `[Picture(Legend = "Small Image", Localized = false)]`; reverted to N — same as above |
 | `title` | `Title` | string | L | `[Text(Legend = "Title", Localized = true)]` |
 | `text` | `Text` | CKEditor5 (`bastion` preset) | L | `[HTML(Legend = "Texte", Localized = true)]` |
 
@@ -137,13 +173,68 @@ Full-width banner: title, cover text, image, optional video. _(field table TBD)_
 | `background_color` | `BackgroundColor` | enumeration (White/Lightgray/Gray/Green, default White) | N | `[Enumeration(Localized = false)]`; forced deviation #1 |
 
 ### blocks.slider ← `PanelSlider`
-Title + `slider-slide[]` (kind enum, deviation #2). _(field table TBD)_
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `title` | `Title` | string | L | `[Text(Legend = "Titre", Localized = true)]` |
+| `show` | `Show` | boolean (default true) | L | `[Switch(Legend = "Show on website", Localized = true)]`; forced deviation #1 |
+| `show_title` | `ShowTitle` | boolean (default true) | L | `[Switch(Legend = "Show Title", Localized = true)]`; forced deviation #1 |
+| `background_color` | `BackgroundColor` | enumeration (White/Lightgray/Gray/Blue, default White) | N | `[Enumeration(Localized = false)]`; forced deviation #4 (C# name is `Green`; Strapi uses `Blue` — see deviation #4) |
+| `slides` | _(dynamic: `SlideImage` \| `SlideText` leaf types of `ISlide`)_ | dynamic zone (`blocks.slide-image`, `blocks.slide-text`) | L | forced deviation #2 (dynamic zone replaces kind-enum plan — see above) |
+
+#### blocks.slide-image ← `PanelSlider.SlideImage`
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `image` | `Image` | media (single, images only) | N | `[Picture(Legend = "Image", Localized = false)]` → `PictureRef` |
+
+#### blocks.slide-text ← `PanelSlider.SlideText`
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `text` | `Text` | CKEditor5 (`bastion` preset) | L | `[HTML(Legend = "Text", Localized = true)]` |
 
 ### blocks.info ← `PanelInfo`
-Title + columns (image + HTML text). _(field table TBD)_
+
+Title + columns (image + HTML text). Used on Accommodation and Location page dynamic zones.
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `title` | `Title` | string | L | `[Text(Legend="Title", Localized=true)]` |
+| `show` | `Show` | boolean (default `true`) | L | `[Switch(Legend="Show on website", Localized=true)]` |
+| `show_title` | `ShowTitle` | boolean (default `true`) | L | `[Switch(Legend="Show Title", Localized=true)]` |
+| `background_color` | `BackgroundColor` | enumeration (`White`/`Lightgray`/`Gray`/`Blue`, default `White`) | N | `[Enumeration("background color", Localized=false)]`; deviation #4 — C# `Green` stored as `Blue` (matching `slider.json` precedent) |
+| `items` | _(list of `PanelInfoItem`)_ | repeatable component `blocks.info-item` | L | nested `[Leaf]` class; localised so item order can vary per locale |
+
+#### blocks.info-item ← `PanelInfo.PanelInfoItem`
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `image` | `Image` | media (single, images only) | N | `[Picture(Legend="Image")]` → `PictureRef`; no `Localized` flag on attribute — shared across locales |
+| `text` | `Text` | CKEditor5 (`bastion` preset) | L | `[HTML(Legend="Texte", Localized=true)]` with `CustomStyles`; same CKE5 setup as `paragraph-image` and `building-item` |
 
 ### blocks.floors ← `PanelFloors`
-Title + intro + floor items with lightbox images. _(field table TBD)_
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `title` | `Title` | string | L | `[Text(Legend = "Titre", Localized = true)]` |
+| `intro_title` | `IntroTitle` | CKEditor5 (`bastion` preset) | L | `[HTML(Legend = "Intro Titre", Localized = true)]` |
+| `caption` | `Caption` | string | L | `[Text(Legend = "* caption text", Localized = true)]` |
+| `show` | `Show` | boolean (default true) | L | forced deviation #1 (flattened inheritance) |
+| `show_title` | `ShowTitle` | boolean (default true) | L | forced deviation #1 |
+| `background_color` | `BackgroundColor` | enumeration (White/Lightgray/Gray/Blue, default White) | N | forced deviation #4: C# enum named `Green`; Strapi uses `Blue` |
+| `floors` | `Floor` leaves | repeatable component (`blocks.floor-item`) | L | wrapper localised; non-localised item fields handled per row |
+
+#### blocks.floor-item ← `PanelFloors.Floor`
+
+| Strapi field | C# property | Type | Localised | Notes |
+|---|---|---|---|---|
+| `number` | `Number` | string | L | `[Text(Legend = "Number", Localized = true)]` |
+| `orientation` | `Orientation` | enumeration (Left/Right/Full, default Left) | N | `[Enumeration(Legend = "Orientation", Localized = false)]`; MongoDB stores as int index 0/1/2 |
+| `text` | `Text` | string | L | `[Text(Legend = "Floor title", Localized = true)]` |
+| `description` | `Description` | text | L | `[Text(Legend = "Floor description", Localized = true, Multiline = true)]` |
+| `uid` | `UID` | string | N | `[UID(Base = "Number")]` — generated from Number, not localised |
+| `images` | `Images` | media (multiple, images only) | N | `[Pictures(Legend = "images", Localized = false)]`; uploaded to media library |
 
 ### blocks.map ← `PanelMap`
 Title + building coordinates + place markers (category). _(field table TBD)_

@@ -1,0 +1,47 @@
+{
+  "collectionName": "components_blocks_floors",
+  "info": {
+    "displayName": "Floors",
+    "icon": "layer",
+    "description": "PanelFloors — title, HTML intro, caption, show/show_title/background_color, floor items with lightbox images"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "intro_title": {
+      "type": "customField",
+      "customField": "plugin::ckeditor5.CKEditor",
+      "options": { "preset": "bastion" },
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "caption": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "show": {
+      "type": "boolean",
+      "default": true,
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "show_title": {
+      "type": "boolean",
+      "default": true,
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "background_color": {
+      "type": "enumeration",
+      "enum": ["White", "Lightgray", "Gray", "Blue"],
+      "default": "White",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "floors": {
+      "type": "component",
+      "repeatable": true,
+      "component": "blocks.floor-item",
+      "pluginOptions": { "i18n": { "localized": true } }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "collectionName": "components_blocks_infos",
+  "info": {
+    "displayName": "Info",
+    "icon": "information",
+    "description": "PanelInfo — title, show/show_title/background_color, repeatable info-item columns (image + HTML text)"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "show": {
+      "type": "boolean",
+      "default": true,
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "show_title": {
+      "type": "boolean",
+      "default": true,
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "background_color": {
+      "type": "enumeration",
+      "enum": ["White", "Lightgray", "Gray", "Blue"],
+      "default": "White",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "items": {
+      "type": "component",
+      "repeatable": true,
+      "component": "blocks.info-item",
+      "pluginOptions": { "i18n": { "localized": true } }
+    }
+  }
+}

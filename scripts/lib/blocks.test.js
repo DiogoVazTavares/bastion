@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mapBackgroundColor, applyNonLocalised, mapParagraph, mapParagraphImage, mapBuilding, mapPartners } from './blocks.js';
+import { mapBackgroundColor, applyNonLocalised, mapParagraph, mapParagraphImage, mapBuilding, mapPartners, mapInfo } from './blocks.js';
 
 test('mapBackgroundColor maps integer index to string', () => {
   assert.equal(mapBackgroundColor(0), 'White');
@@ -236,4 +236,80 @@ test('mapPartners missing Show and ShowTitle default to true', () => {
 test('mapPartners BackgroundColor integer maps correctly', () => {
   assert.equal(mapPartners({ BackgroundColor: 2 }, []).background_color, 'Gray');
   assert.equal(mapPartners({ BackgroundColor: 3 }, []).background_color, 'Blue');
+});
+
+// mapInfo
+
+test('mapInfo maps all fields from a complete doc with items', () => {
+  const doc = {
+    Title: 'Info Block',
+    Show: false,
+    ShowTitle: false,
+    BackgroundColor: 2,
+    Items: [
+      { Text: '<p>col 1</p>' },
+      { Text: '<p>col 2</p>' },
+    ],
+  };
+  const itemImageIds = [{ imageId: 10 }, { imageId: 20 }];
+  const result = mapInfo(doc, itemImageIds);
+  assert.equal(result.title, 'Info Block');
+  assert.equal(result.show, false);
+  assert.equal(result.show_title, false);
+  assert.equal(result.background_color, 'Gray');
+  assert.equal(result.items.length, 2);
+});
+
+test('mapInfo items text and image are mapped from doc.Items and itemImageIds', () => {
+  const doc = { Items: [{ Text: '<p>alpha</p>' }, { Text: '<p>beta</p>' }] };
+  const result = mapInfo(doc, [{ imageId: 5 }, { imageId: 6 }]);
+  assert.equal(result.items[0].text, '<p>alpha</p>');
+  assert.equal(result.items[0].image, 5);
+  assert.equal(result.items[1].text, '<p>beta</p>');
+  assert.equal(result.items[1].image, 6);
+});
+
+test('mapInfo item with no image entry in itemImageIds yields image: null', () => {
+  const doc = { Items: [{ Text: '<p>x</p>' }] };
+  const result = mapInfo(doc, [{ imageId: null }]);
+  assert.equal(result.items[0].image, null);
+});
+
+test('mapInfo item with no corresponding itemImageIds entry yields image: null', () => {
+  const doc = { Items: [{ Text: '<p>x</p>' }, { Text: '<p>y</p>' }] };
+  const result = mapInfo(doc, [{ imageId: 7 }]);
+  assert.equal(result.items[0].image, 7);
+  assert.equal(result.items[1].image, null);
+});
+
+test('mapInfo missing Items defaults to empty items array', () => {
+  const result = mapInfo({}, []);
+  assert.deepEqual(result.items, []);
+});
+
+test('mapInfo missing Show defaults to true, missing ShowTitle defaults to false', () => {
+  const result = mapInfo({ Items: [] }, []);
+  assert.equal(result.show, true);
+  // Unlike the other blocks, mapInfo defaults ShowTitle to false: C# bool defaults to
+  // false and MongoDB.Driver omits fields serialised at their default, so a missing
+  // ShowTitle means false (verified against live Accommodation data). See mapInfo().
+  assert.equal(result.show_title, false);
+});
+
+test('mapInfo BackgroundColor integer maps correctly', () => {
+  assert.equal(mapInfo({ Items: [], BackgroundColor: 0 }, []).background_color, 'White');
+  assert.equal(mapInfo({ Items: [], BackgroundColor: 1 }, []).background_color, 'Lightgray');
+  assert.equal(mapInfo({ Items: [], BackgroundColor: 3 }, []).background_color, 'Blue');
+});
+
+test('mapInfo background_color propagates via applyNonLocalised', () => {
+  const doc = { Items: [], BackgroundColor: 2 };
+  const payloads = {
+    en: mapInfo(doc, []),
+    fr: mapInfo({ ...doc, BackgroundColor: 0 }, []),
+    nl: mapInfo({ ...doc, BackgroundColor: 0 }, []),
+  };
+  const result = applyNonLocalised(payloads, ['background_color', 'items']);
+  assert.equal(result.fr.background_color, 'Gray');
+  assert.equal(result.nl.background_color, 'Gray');
 });

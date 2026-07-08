@@ -50,7 +50,8 @@
         "blocks.paragraph-image",
         "blocks.building",
         "blocks.partners"
-      ]
+      ],
+      "pluginOptions": { "i18n": { "localized": true } }
     }
   }
 }

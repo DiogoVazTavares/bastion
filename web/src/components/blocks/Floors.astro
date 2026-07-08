@@ -1,0 +1,294 @@
+---
+import svgBase from "./floors-svg-base.html?raw";
+
+interface FloorItem {
+  number: string | null;
+  orientation: "Left" | "Right" | "Full";
+  text: string | null;
+  description: string | null;
+  uid: string | null;
+  images: { url: string; alternativeText: string | null }[];
+}
+
+interface Props {
+  show: boolean;
+  show_title: boolean;
+  background_color: "White" | "Lightgray" | "Gray" | "Blue";
+  title: string | null;
+  intro_title: string | null;
+  caption: string | null;
+  floors: FloorItem[];
+  autoOpenUid?: string;
+}
+
+const {
+  show,
+  show_title,
+  title,
+  background_color,
+  intro_title,
+  caption,
+  floors,
+  autoOpenUid,
+} = Astro.props;
+
+const bgClass: Record<string, string> = {
+  Lightgray: "section--bg-light-gray",
+  Gray: "section--bg-gray",
+  Blue: "section--bg-green",
+};
+
+const sectionClass = ["section", bgClass[background_color]]
+  .filter(Boolean)
+  .join(" ");
+
+const floorHeight = 14.87;
+const groundHeight = 9.2;
+const groundY = 362.3;
+const floorY = 347.4;
+
+const validFloors = floors.filter((f) => f.number && f.number.trim() !== "");
+const lightboxFloors = validFloors.filter(
+  (f) => f.uid && f.images && f.images.length > 0,
+);
+
+function floorGeometry(floor: FloorItem) {
+  const num = parseInt(floor.number!) - 2;
+  const y = num === 0 ? groundY : floorY - floorHeight * (num - 1);
+  const height = num === 0 ? groundHeight : floorHeight;
+  let x: number, width: number;
+  if (floor.orientation === "Right") {
+    x = 172.3;
+    width = 101.3;
+  } else if (floor.orientation === "Full") {
+    x = 15.9;
+    width = num <= 21 ? 257.7 : 154;
+  } else {
+    x = 15.9;
+    width = 154;
+  }
+  return { num, x, y, width, height };
+}
+
+const hasImages = (f: FloorItem) => Boolean(f.uid && f.images.length > 0);
+---
+
+{
+  show && (
+    <div class={sectionClass} data-spy-enter-viewport>
+      <div class="section__inner">
+        {show_title && title && <h4 class="section__title">{title}</h4>}
+        <div
+          class="floors"
+          data-behavior="floors"
+          data-autoopen-uid={autoOpenUid ?? undefined}
+        >
+          <div class="floors__intro">
+            <Fragment set:html={intro_title ?? ""} />
+          </div>
+          <div class="floors__inner">
+            {validFloors.map((floor) => (
+              <>
+                <div
+                  class="floors__floor-legend floors__floor-legend--left"
+                  data-rect-id={floor.uid}
+                >
+                  <Fragment
+                    set:html={(floor.text ?? "").replace(/\n/g, "<br />")}
+                  />
+                </div>
+                <div
+                  class="floors__floor-legend floors__floor-legend--right"
+                  data-rect-id={floor.uid}
+                >
+                  <Fragment
+                    set:html={(floor.description ?? "").replace(
+                      /\n/g,
+                      "<br />",
+                    )}
+                  />
+                </div>
+              </>
+            ))}
+
+            <svg
+              version="1.1"
+              id="Layer_1"
+              xmlns="http://www.w3.org/2000/svg"
+              xmlns:xlink="http://www.w3.org/1999/xlink"
+              x="0px"
+              y="0px"
+              viewBox="0 0 288 417"
+              style="enable-background:new 0 0 288 417;"
+              xml:space="preserve"
+              onload="place()"
+            >
+              <g id="Etage">
+                {validFloors.map((floor) => {
+                  const { x, y, width, height } = floorGeometry(floor);
+                  return (
+                    <rect
+                      id={floor.uid}
+                      onmouseout={`outfloor('${floor.uid}')`}
+                      onmouseover={`overfloor('${floor.uid}')`}
+                      data-behavior={hasImages(floor) ? "lightbox" : undefined}
+                      data-lightbox-suffix={floor.uid}
+                      data-lightbox-title={floor.text ?? ""}
+                      x={x.toString()}
+                      y={y.toString()}
+                      class="floors__floor"
+                      width={width.toString()}
+                      height={height.toString()}
+                    />
+                  );
+                })}
+              </g>
+              <Fragment set:html={svgBase} />
+            </svg>
+          </div>
+
+          <div class="floors__inner floors__inner--mobile">
+            {validFloors.map((floor) => (
+              <div
+                class="floors__floor-mobile-item icon icon--plus-after"
+                data-behavior={hasImages(floor) ? "lightbox" : undefined}
+                data-lightbox-suffix={floor.uid}
+                data-lightbox-title={floor.text ?? ""}
+              >
+                <div class="floors__floor-mobile-item-title">
+                  <Fragment
+                    set:html={(floor.text ?? "").replace(/\n/g, "<br />")}
+                  />
+                </div>
+                <div class="floors__floor-mobile-item-description">
+                  <Fragment
+                    set:html={(floor.description ?? "").replace(
+                      /\n/g,
+                      "<br />",
+                    )}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div class="floors__caption">{caption}</div>
+
+          {/* Hidden lightbox fragments — one per floor with images. Markup mirrors the
+          legacy _Lightbox.cshtml partial; the island clones these on click instead of
+          XHR-fetching them, then reuses the ported Slider for image navigation. */}
+          <div class="floors__lightboxes" hidden aria-hidden="true">
+            {lightboxFloors.map((floor) => (
+              <div data-lightbox-id={floor.uid}>
+                <div class="lightbox" data-behavior="lightbox">
+                  <div
+                    class="lightbox__inner"
+                    data-behavior="slider"
+                    data-slider-autoplay="false"
+                  >
+                    <div class="lightbox__slides" data-behavior="slider-slides">
+                      {floor.images.map((image) => (
+                        <figure
+                          class="lightbox__slide"
+                          data-behavior="slider-slide"
+                        >
+                          <img
+                            class="lightbox__slide-image"
+                            srcset={`${image.url}?w=450 450w, ${image.url}?w=600 600w, ${image.url}?w=900 900w, ${image.url}?w=1200 1200w, ${image.url}?w=1500 1500w, ${image.url}?w=2000 2000w`}
+                            sizes="calc(100vw - 50px)"
+                            src={image.url}
+                            alt={image.alternativeText ?? ""}
+                          />
+                          {image.alternativeText && (
+                            <figcaption class="lightbox__slide-figcaption">
+                              {image.alternativeText}
+                            </figcaption>
+                          )}
+                        </figure>
+                      ))}
+                    </div>
+
+                    <a
+                      class="icon icon--close-circle lightbox__close"
+                      data-behavior="lightbox-close"
+                      aria-label="Close lightbox"
+                    />
+                    {floor.images.length > 1 && (
+                      <>
+                        <a
+                          class="icon icon--arrow-circle-left lightbox__control lightbox__control--previous"
+                          data-behavior="slider-previous"
+                          aria-label="Previous image"
+                        />
+                        <a
+                          class="icon icon--arrow-circle-right lightbox__control lightbox__control--next"
+                          data-behavior="slider-next"
+                          aria-label="Next image"
+                        />
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+<script is:inline>
+  // Global helpers referenced by inline SVG attributes (onload / onmouseover / onmouseout).
+  //
+  // This MUST stay `is:inline` and cannot move to a .ts module: inline event-handler
+  // attributes resolve their callbacks against the global scope, but a bundled/module
+  // script (what a .ts import produces) runs in its own module scope — the functions
+  // would not be global, so `onload="place()"` etc. would throw "place is not defined".
+  // Being inline it is emitted verbatim (no TS syntax allowed here for the same reason).
+  //
+  // ESLint can't see the inline-attribute call sites, so it flags these as unused.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  function place() {
+    const elts = document.querySelectorAll(".floors__floor");
+    for (let i = 0; i < elts.length; i++) {
+      const elt = elts[i];
+      const id = elt.id;
+      const parent = document.getElementById("Layer_1");
+      const top =
+        elt.getBoundingClientRect().top - parent.getBoundingClientRect().top;
+      const legends = document.querySelectorAll("*[data-rect-id='" + id + "']");
+      let l = legends.length;
+      while (l--) {
+        legends[l].style.top = top + "px";
+      }
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  function overfloor(id) {
+    const elt = document.getElementById(id);
+    const parent = document.getElementById("Layer_1");
+    const top =
+      elt.getBoundingClientRect().top - parent.getBoundingClientRect().top;
+    const legends = document.querySelectorAll("*[data-rect-id='" + id + "']");
+    let l = legends.length;
+    while (l--) {
+      legends[l].classList.add("floors__floor-legend--active");
+      legends[l].style.top = top + "px";
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  function outfloor(id) {
+    const legends = document.querySelectorAll("*[data-rect-id='" + id + "']");
+    let l = legends.length;
+    while (l--) {
+      legends[l].classList.remove("floors__floor-legend--active");
+    }
+  }
+</script>
+
+<script>
+  import "../../scripts/FloorsLightbox";
+</script>

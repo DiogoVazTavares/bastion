@@ -1,0 +1,5 @@
+dist/
+.astro/
+pnpm-lock.yaml
+# Compiled CSS artifacts alongside Less sources — not imported by the build
+src/styles/*.css

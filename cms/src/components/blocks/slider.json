@@ -1,0 +1,36 @@
+{
+  "collectionName": "components_blocks_sliders",
+  "info": {
+    "displayName": "Slider",
+    "icon": "play",
+    "description": "PanelSlider — title, show/show_title/background_color, slides dynamic zone (SlideImage | SlideText)"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "show": {
+      "type": "boolean",
+      "default": true,
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "show_title": {
+      "type": "boolean",
+      "default": true,
+      "pluginOptions": { "i18n": { "localized": true } }
+    },
+    "background_color": {
+      "type": "enumeration",
+      "enum": ["White", "Lightgray", "Gray", "Blue"],
+      "default": "White",
+      "pluginOptions": { "i18n": { "localized": false } }
+    },
+    "slides": {
+      "type": "dynamiczone",
+      "components": ["blocks.slide-image", "blocks.slide-text"],
+      "pluginOptions": { "i18n": { "localized": true } }
+    }
+  }
+}

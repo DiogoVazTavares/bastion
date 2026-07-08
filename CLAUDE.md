@@ -31,6 +31,13 @@ Be extremely concise. Sacrifice grammar for the sake of concision.
 | `docs/` | content-architect maintains `model-mapping.md`; all read | shared contract & vocab |
 | `.claude/` | human | agents, skill, hooks |
 
+**Package managers:** each project is **independent — no shared workspace** (so cloud builds
+stay isolated). `web/`, `scripts/`, and the repo root each use **pnpm** with their own
+`pnpm-lock.yaml`; **`cms/` uses npm** with its own `package-lock.json`. Install per directory
+(`pnpm install` in root/web/scripts, `npm install` in cms). This keeps the Cloudflare Pages
+build (`web/`) and Strapi Cloud build (`cms/`) building from their own dir + lockfile, exactly
+as their dashboards expect.
+
 Boundaries are enforced by `scripts/claude-hooks/enforce-paths.sh` (a `PreToolUse` hook in
 each writer agent). Cross-cutting notes go in `docs/decisions.md` (writable by all). If work
 seems to belong to another agent's area, STOP and report — never work around the boundary,
@@ -77,9 +84,10 @@ client PII, ever go in memory, prompts, issue comments, or PRs.**
   `validateEnv()`.
 - **Old CMS is the source of truth until cutover.** Don't edit content in Strapi except to
   test; the full ETL re-runs shortly before DNS cutover.
-- **npm scripts**: every `migrate-<page>.js` script must have matching entries in
+- **Run scripts**: every `migrate-<page>.js` script must have matching entries in
   `scripts/package.json` — `"migrate:<page>:local"` and `"migrate:<page>:prod"` — following
-  the existing `contact`/`credits` pattern.
+  the existing `contact`/`credits` pattern. Run them with `pnpm run migrate:<page>:<env>`
+  (`scripts/` is part of the pnpm workspace).
 
 ## Rich text / CKE5
 
@@ -101,6 +109,23 @@ Work is driven by GitHub issues (one per page/block, with `Blocked by` dependenc
 dependencies, dispatches to the agents in order, verifies against the acceptance criteria,
 and opens a **PR per issue** (`Closes #N`, criteria checklist, parity evidence). The human
 is the merge gate. Verification runs against Cloudflare Pages **preview deploys**.
+
+## Branching & release
+
+- **`develop`** is the integration trunk and the **GitHub default branch**. Every issue PR
+  targets `develop`; because it is the default branch, merging a PR that says `Closes #N`
+  **auto-closes** the issue. (Historically PRs merged to `develop` while the default was
+  `main`, so `Closes #N` never fired and issues had to be closed by hand — that is the reason
+  the default was moved to `develop`.)
+- **`main`** is the **production branch**. It is deployed, not developed on: Cloudflare Pages
+  (Astro site) and Strapi Cloud (CMS) each pin their production build to `main` in their own
+  dashboards — a stored branch name, independent of the GitHub default. Non-`main` branches
+  (incl. `develop`) produce **preview** deploys only.
+- **Release = a `develop → main` PR.** Merging it triggers the production Strapi/Astro/
+  Cloudflare builds and is when the full ETL re-runs before DNS cutover (see Migration rules).
+  Issues are already closed by their develop merge, so this PR closes nothing new.
+- If you change the GitHub default branch, **re-confirm** Cloudflare's *Production branch* and
+  Strapi Cloud's connected branch are still explicitly `main` (they do not track the default).
 
 
 While talking to me, be extremely concise. Sacrifice grammar for the sake of concision.

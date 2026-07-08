@@ -61,3 +61,69 @@ They are catalogued here so the auditor never re-raises them.
 - Issue: Old markup had `alt="Alternate Text"` — meaningless placeholder.
 - WCAG: 1.1.1 (A)
 - Status: Rebuild IMPROVES on this (uses Strapi `alternativeText`, falls back to empty string for decorative). Not a regression — see T1 note in issue 12 findings.
+
+## T3-009 — Slider prev/next controls are `<a>` without `href` (not keyboard focusable)
+- File: `old/Views/Shared/Blocks/_Slider.cshtml` lines 51–54 / `web/src/components/blocks/Slider.astro` lines 73–80
+- Issue: `<a class="icon icon--arrow-circle-left slider__control slider__control--previous">` and matching `--next` have no `href`, no `role`, no `tabindex`. They are not in the tab order and are not operable by keyboard.
+- WCAG: 2.1.1 (A)
+- Status: pre-existing on old site — exact same markup in `_Slider.cshtml` lines 51–54. T3, out of scope this phase. See T2-SL-003 for the Tier 2 queue item.
+
+## T3-010 — Slider nav-dot items are `<a>` without `href` (not keyboard focusable)
+- File: `old/Views/Shared/Blocks/_Slider.cshtml` lines 55–60 / `web/src/components/blocks/Slider.astro` lines 82–89
+- Issue: `<a class="slider__nav-item">` dots have no `href`, no `role`, no `tabindex`, no label. Not focusable, no accessible name.
+- WCAG: 2.1.1 / 4.1.2 (A / AA)
+- Status: pre-existing on old site — exact same pattern. T3, out of scope this phase. See T2-SL-004 for the Tier 2 queue item.
+
+## T3-011 — Slider has no `role="region"` / `aria-label` landmark and no live region for slide changes
+- File: `old/Views/Shared/Blocks/_Slider.cshtml` / `web/src/components/blocks/Slider.astro`
+- Issue: The slider has no landmark region and no `aria-live` region; screen readers receive no announcement when slides advance automatically.
+- WCAG: 4.1.3 (AA)
+- Status: pre-existing on old site — T3, out of scope this phase. See T2-SL-005 for the Tier 2 queue item.
+
+## T3-012 — Autoplay has no pause mechanism
+- File: `old/Scripts/Slider.ts` / `web/src/scripts/Slider.ts`
+- Issue: `stopOnInteract=true` stops the interval after a user-initiated slide change, but there is no hover-pause, focus-pause, or explicit pause button. WCAG 2.2.2 requires a pause/stop/hide mechanism for auto-advancing content.
+- WCAG: 2.2.2 (A)
+- Status: pre-existing on old site — old `Slider.ts` has identical logic, no hover/focus pause. T3, out of scope this phase. See T2-SL-006 for the Tier 2 queue item.
+
+## T3-013 — Info block column row has no list semantics
+- File: `old/Views/Shared/Blocks/_Info.cshtml` lines 9–20 / `web/src/components/blocks/Info.astro` lines 33–45
+- Issue: The `.info__inner` row of `.info__item` columns is a plain `<div>` group; items are not marked up as a list. For purely visual column layouts this is a common, accepted pattern; however it means columns have no semantic grouping announcement for screen readers.
+- WCAG: 1.3.1 (A) — borderline; only a concern if columns are semantically equivalent list-like items
+- Status: Identical pattern in old `_Info.cshtml`. T3, out of scope this phase.
+
+## T3-015 — Lightbox close `<a>` has no accessible name
+- File: `old/Views/Shared/Blocks/_Lightbox.cshtml` line 32 / `web/src/components/blocks/Floors.astro` line 190
+- Issue: `<a class="icon icon--close-circle lightbox__close" data-behavior="lightbox-close">` — icon-only, no label.
+- WCAG: 4.1.2 (AA)
+- Status: pre-existing on old site — T3, out of scope this phase. T1-FL-01 covers the invisible-win `aria-label` on the rebuild.
+
+## T3-016 — Lightbox prev/next `<a>` controls have no accessible names
+- File: `old/Views/Shared/Blocks/_Lightbox.cshtml` lines 36-39 / `web/src/components/blocks/Floors.astro` lines 195-203
+- Issue: `icon--arrow-circle-left/right` links inside lightbox — icon-only, no label.
+- WCAG: 4.1.2 (AA)
+- Status: pre-existing on old site — T3, out of scope this phase. T1-FL-02 covers the invisible-win `aria-label` on the rebuild.
+
+## T3-017 — Lightbox container has no role="dialog" / aria-modal
+- File: `old/Scripts/Lightbox.ts` `_Init()` / `web/src/components/blocks/Floors.astro` openLightbox()
+- Issue: The injected container div has no `role`, `aria-modal`, or accessible name. Screen readers do not announce it as a dialog.
+- WCAG: 4.1.2 (AA)
+- Status: pre-existing on old site — T3, out of scope this phase. T2-FL-01 covers the queue item for the rebuild.
+
+## T3-018 — No focus management on lightbox open/close
+- File: `old/Scripts/Lightbox.ts` Open() / Close() / `web/src/components/blocks/Floors.astro` openLightbox() / closeLightbox()
+- Issue: Focus is not moved into the lightbox on open, not returned on close, and not trapped inside.
+- WCAG: 2.4.3 (AA), 2.1.2 (A)
+- Status: pre-existing on old site — T3, out of scope this phase. T2-FL-02 covers the queue item.
+
+## T3-019 — SVG rect and mobile-div floor triggers are keyboard-inaccessible
+- File: `old/Views/Shared/Blocks/_Floors.cshtml` lines 96 & 567 / `web/src/components/blocks/Floors.astro` lines 111-125 & 133-150
+- Issue: `<rect>` elements and `.floors__floor-mobile-item` divs have click handlers but no `tabindex`, `role`, or `keydown` handler. Not keyboard-operable.
+- WCAG: 2.1.1 (A)
+- Status: pre-existing on old site — T3, out of scope this phase. T2-FL-03 covers the queue item.
+
+## T3-014 — Info block section outer uses `<div>` not `<article>` or `<section>`
+- File: `old/Views/Shared/Blocks/_Section.cshtml` line 22 uses `<article>` / `web/src/components/blocks/Info.astro` line 28 uses `<div>`
+- Issue: Old site rendered the outer block wrapper as `<article class="section">`. Rebuild uses `<div class="section">`. Loss of landmark semantics (minor — `<article>` as block wrapper is unusual and not a strong landmark).
+- WCAG: 1.3.1 (A) — minor
+- Status: The difference is in the outer wrapper, not the Info block itself. The old `_Info.cshtml` did not own that wrapper; `_Section.cshtml` did. This is a cross-cutting pattern across all rebuilt blocks (Paragraph, Slider, etc. all use `<div>`). T3-level: not unique to Info, pre-existing architectural choice across rebuild. Out of scope this phase.

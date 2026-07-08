@@ -1,0 +1,55 @@
+---
+import type { GetStaticPaths, InferGetStaticPropsType } from "astro";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Hero from "../../../components/Hero.astro";
+import Paragraph from "../../../components/blocks/Paragraph.astro";
+import Slider from "../../../components/blocks/Slider.astro";
+import Info from "../../../components/blocks/Info.astro";
+import Floors from "../../../components/blocks/Floors.astro";
+import { fetchAccommodation } from "../../../lib/strapi";
+
+export const getStaticPaths = (async () => {
+  const locales = ["en", "fr", "nl"];
+  const paths = [];
+  for (const locale of locales) {
+    const accommodation = await fetchAccommodation(locale);
+    const floorsBlock = accommodation.blocks.find(
+      (b: any) => b.__component === "blocks.floors",
+    ) as any;
+    const floors = floorsBlock?.floors ?? [];
+    for (const floor of floors) {
+      if (floor.uid && floor.images && floor.images.length > 0) {
+        paths.push({
+          params: { locale, uid: floor.uid },
+          props: { accommodation, locale, autoOpenUid: floor.uid },
+        });
+      }
+    }
+  }
+  return paths;
+}) satisfies GetStaticPaths;
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>;
+const { accommodation, locale, autoOpenUid } = Astro.props;
+---
+
+<BaseLayout
+  title={accommodation.browser_title ?? accommodation.title ?? undefined}
+  description={accommodation.google_description ?? undefined}
+  locale={locale}
+  currentSlug="accommodation"
+>
+  <Hero title={accommodation.hero} image={accommodation.image} video={null} />
+  <div id="content" tabindex="-1"></div>
+  {
+    accommodation.blocks.map((block: any) => {
+      if (block.__component === "blocks.paragraph")
+        return <Paragraph {...block} />;
+      if (block.__component === "blocks.slider") return <Slider {...block} />;
+      if (block.__component === "blocks.info") return <Info {...block} />;
+      if (block.__component === "blocks.floors")
+        return <Floors {...block} autoOpenUid={autoOpenUid} />;
+      return null;
+    })
+  }
+</BaseLayout>
