@@ -1,4 +1,30 @@
 import { readFile, writeFile } from 'node:fs/promises';
+import { extname } from 'node:path';
+
+// Extension → MIME map for types whose legacy CMS records have null MimeType.
+// Keep application/octet-stream as the final fallback only when the extension is unknown.
+const EXT_MIME = {
+  '.svg':  'image/svg+xml',
+  '.png':  'image/png',
+  '.jpg':  'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif':  'image/gif',
+  '.webp': 'image/webp',
+};
+
+/**
+ * Derives a MIME type from a filename when the source record has no MimeType.
+ * If MimeType is present and non-empty, it is returned unchanged.
+ *
+ * @param {string|null|undefined} mimeType
+ * @param {string} filename
+ * @returns {string}
+ */
+function resolveMimeType(mimeType, filename) {
+  if (mimeType) return mimeType;
+  const ext = extname(filename ?? '').toLowerCase();
+  return EXT_MIME[ext] ?? 'application/octet-stream';
+}
 
 export class AssetResolutionError extends Error {
   constructor(message) {
@@ -13,12 +39,22 @@ export class AssetResolutionError extends Error {
  * Identity key: FileRef.Id — stable across re-runs and locales.
  * Idempotency: manifest is checked before any upload; same Id uploaded once.
  *
+ * Caption backfill (idempotency for BUG-4 fix): when a manifest hit is found and
+ * `updateInfo` is provided, we GET the file and check whether its caption is already
+ * populated. If not, we call updateInfo to set it. This ensures re-runs apply the
+ * caption to images that were uploaded before the caption field was added to uploadMedia.
+ *
  * @param {Array<{Id: string, Legend: string, Name: string, Src: string, MimeType?: string}>} fileRefs
  * @param {Record<string, number>} manifest  - keyed by FileRef.Id → Strapi media id
- * @param {{ fetchBytes: (src: string) => Promise<Buffer>, upload: (filename: string, buffer: Buffer, mimeType: string, altText: string) => Promise<{id: number, url: string}>, verify?: (strapiId: number) => Promise<boolean> }} fns
+ * @param {{
+ *   fetchBytes: (src: string) => Promise<Buffer>,
+ *   upload: (filename: string, buffer: Buffer, mimeType: string, altText: string) => Promise<{id: number, url: string}>,
+ *   verify?: (strapiId: number) => Promise<boolean>,
+ *   updateInfo?: (strapiId: number, fileInfo: object) => Promise<object>
+ * }} fns
  * @returns {Promise<{ manifest: Record<string, number>, ids: Map<string, number>, stats: { uploaded: number, reused: number } }>}
  */
-export async function resolveAssets(fileRefs, manifest, { fetchBytes, upload, verify }) {
+export async function resolveAssets(fileRefs, manifest, { fetchBytes, upload, verify, updateInfo }) {
   const updatedManifest = { ...manifest };
   const ids = new Map();
   const stats = { uploaded: 0, reused: 0 };
@@ -28,7 +64,7 @@ export async function resolveAssets(fileRefs, manifest, { fetchBytes, upload, ve
 
   for (const ref of fileRefs) {
     const { Id, Legend: altText, Name: filename, Src: src } = ref;
-    const mimeType = ref.MimeType ?? 'application/octet-stream';
+    const mimeType = resolveMimeType(ref.MimeType, filename ?? src);
 
     if (ids.has(Id)) {
       // already processed this Id in this run — reuse without incrementing reused again
@@ -41,6 +77,24 @@ export async function resolveAssets(fileRefs, manifest, { fetchBytes, upload, ve
       if (verify !== undefined) {
         const alive = await verify(strapiId);
         if (alive) {
+          // Caption backfill: if the file exists but was uploaded before caption was
+          // written, update it now so re-runs remain idempotent for the caption field.
+          if (updateInfo !== undefined && altText) {
+            const fileRes = await fetch(
+              `${process.env.STRAPI_URL.replace(/\/$/, '')}/api/upload/files/${strapiId}`,
+              { headers: { Authorization: `Bearer ${process.env.STRAPI_TOKEN}` } }
+            );
+            if (fileRes.ok) {
+              const file = await fileRes.json();
+              if (!file.caption) {
+                await updateInfo(strapiId, {
+                  alternativeText: altText,
+                  caption: altText,
+                  name: filename,
+                });
+              }
+            }
+          }
           ids.set(Id, strapiId);
           stats.reused++;
           continue;

@@ -306,6 +306,14 @@ export function Discover() {
   );
 
   sliders.forEach((sliderContainer) => {
+    // Skip sliders inside a hidden subtree (e.g. the floor-plan lightbox templates in
+    // `.floors__lightboxes[hidden]`). Initialising them here would strip their
+    // `data-behavior="slider"` (see constructor) while they are still templates, leaving the
+    // cloned-into-the-lightbox copy un-initialised so its prev/next controls never bind. They
+    // are instead Discovered when cloned into the visible lightbox. Mirrors the legacy
+    // MutationObserver behaviour, which only initialised sliders once added to the live DOM.
+    if (sliderContainer.closest("[hidden]")) return;
+
     const options = new SliderOptions();
 
     if (sliderContainer.hasAttribute("data-slider-loop")) {

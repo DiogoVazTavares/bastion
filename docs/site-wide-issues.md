@@ -61,3 +61,25 @@ stripe). Not yet implemented locally.
 
 **QA note:** the parity harness should mask the banner region (~40px top) when pixel-diffing
 until this is built, to avoid false-positive diffs on every page.
+
+---
+
+## SW-5 — Section title heading level is `<h4>`, old site uses `<h1>`
+
+**Discovered:** Accommodation parity check (2026-06-23, issue #20)
+**Owner:** astro-builder (component markup) + a11y-auditor (queue item #5)
+**Affected:** All blocks with a `section__title`, all pages — `Paragraph.astro`,
+`ParagraphImage.astro`, `Building.astro`, `Partners.astro`, `Slider.astro`, `Info.astro`,
+`Floors.astro`.
+
+`old/Views/Shared/Blocks/_Section.cshtml:31` renders the section title as
+`<h1 class="section__title">`. All rebuilt components use `<h4 class="section__title">`. This
+causes a cascading vertical-height pixel diff on every multi-block page (≈12% desktop on
+Accommodation).
+
+Deliberately **kept as `<h4>` for now** (decision 2026-06-23) rather than fixed per-page,
+because: (a) it is shared markup across already-merged pages (Building), and (b) it overlaps
+a11y queue item #5 in `docs/a11y-exceptions.md`, which proposes `<h4>`→`<h2>` (a different
+target than parity's `<h1>`). Resolve the parity-vs-a11y target once, project-wide, and apply
+to all components together. Until then, parity-qa should treat the section-title height delta
+as a known accepted diff on multi-block pages.

@@ -15,7 +15,9 @@
     "migrate:credits:local": "node --env-file=.env migrate-credits.js",
     "migrate:credits:prod": "node --env-file=.env.production migrate-credits.js",
     "migrate:building:local": "node --env-file=.env migrate-building.js",
-    "migrate:building:prod": "node --env-file=.env.production migrate-building.js"
+    "migrate:building:prod": "node --env-file=.env.production migrate-building.js",
+    "migrate:accommodation:local": "node --env-file=.env migrate-accommodation.js",
+    "migrate:accommodation:prod": "node --env-file=.env.production migrate-accommodation.js"
   },
   "dependencies": {
     "mongodb": "^3.7.0"
