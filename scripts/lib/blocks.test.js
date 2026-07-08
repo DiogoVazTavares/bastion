@@ -287,10 +287,13 @@ test('mapInfo missing Items defaults to empty items array', () => {
   assert.deepEqual(result.items, []);
 });
 
-test('mapInfo missing Show and ShowTitle default to true', () => {
+test('mapInfo missing Show defaults to true, missing ShowTitle defaults to false', () => {
   const result = mapInfo({ Items: [] }, []);
   assert.equal(result.show, true);
-  assert.equal(result.show_title, true);
+  // Unlike the other blocks, mapInfo defaults ShowTitle to false: C# bool defaults to
+  // false and MongoDB.Driver omits fields serialised at their default, so a missing
+  // ShowTitle means false (verified against live Accommodation data). See mapInfo().
+  assert.equal(result.show_title, false);
 });
 
 test('mapInfo BackgroundColor integer maps correctly', () => {
